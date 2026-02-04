@@ -529,7 +529,7 @@
         });
         
         function obterUnidades(produto) {
-            return produto.volume === '5L' ? 42 : 12;
+            return produto.volume === '5L' ? 42 : 108;
         }
         
         function salvarDados() {
@@ -546,7 +546,12 @@
         function atualizarEstatisticas() {
             const totalUnidades = produtos.reduce((sum, p) => sum + (p.qtd * obterUnidades(p)), 0);
             const valorTotal = produtos.reduce((sum, p) => sum + (p.qtd * p.preco), 0);
-            const estoqueCritico = produtos.filter(p => (p.qtd * obterUnidades(p)) <= 42).length;
+            const estoqueCritico = produtos.filter(p => {
+                const unidadesTotal = p.qtd * obterUnidades(p);
+                // Para 2L: alerta com 108 unidades (1 andar). Para 5L: alerta com 42 unidades (1 andar)
+                const limite = p.volume === '5L' ? 42 : 108;
+                return unidadesTotal <= limite;
+            }).length;
             
             document.getElementById('totalProdutos').textContent = totalUnidades;
             document.getElementById('valorTotal').textContent = 'R$ ' + valorTotal.toFixed(2);
