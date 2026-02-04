@@ -16,6 +16,7 @@
     <title>Dashboard - Estoque Deposito</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -25,7 +26,8 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
         .container {
@@ -35,11 +37,14 @@
         }
         
         header {
-            background: #2c3e50;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #2c3e50;
+            padding: 30px;
+            border-radius: 20px;
             margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
         
         h1 {
@@ -54,30 +59,87 @@
         }
         
         .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
         }
         
         .stat-card h3 {
-            color: #7f8c8d;
+            color: rgba(255, 255, 255, 0.9);
             font-size: 14px;
             margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .stat-card .number {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            color: #2c3e50;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .table-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 30px;
+        }
+        
+        .dashboard-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+        
+        .period-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .period-tab {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .period-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .period-tab.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 16px rgba(245, 87, 108, 0.4);
         }
         
         .controls {
@@ -88,22 +150,51 @@
         }
         
         input, button {
-            padding: 10px 15px;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
+            padding: 12px 16px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
             font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        input {
+            background: white;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        select {
+            padding: 12px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
         button {
-            background: #27ae60;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             cursor: pointer;
-            transition: background 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
         }
         
         button:hover {
-            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
         
         table {
@@ -288,6 +379,20 @@
             <div class="stat-card">
                 <h3>Produtos com Baixo Estoque</h3>
                 <div class="number" id="baixoEstoque">0</div>
+            </div>
+        </div>
+        
+        <!-- Dashboard de Gráficos -->
+        <div class="dashboard-section">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">📊 Análise de Movimentação</h2>
+            <div class="period-tabs">
+                <button class="period-tab active" onclick="atualizarGrafico(7)">7 Dias</button>
+                <button class="period-tab" onclick="atualizarGrafico(15)">15 Dias</button>
+                <button class="period-tab" onclick="atualizarGrafico(21)">21 Dias</button>
+                <button class="period-tab" onclick="atualizarGrafico(30)">30 Dias</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="movimentacaoChart"></canvas>
             </div>
         </div>
         
@@ -665,6 +770,132 @@
         setTimeout(updateExportButtons, 500);
         
         renderizarTabela();
+        
+        // ===== GRÁFICOS =====
+        let chartInstance = null;
+        let currentPeriod = 7;
+        
+        function calcularMovimentacaoPeriodo(dias) {
+            const dataInicio = new Date();
+            dataInicio.setDate(dataInicio.getDate() - dias);
+            
+            const entradas = {};
+            const saidas = {};
+            
+            // Inicializar todos os dias do período
+            for (let i = 0; i < dias; i++) {
+                const data = new Date();
+                data.setDate(data.getDate() - (dias - 1 - i));
+                const dataStr = data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                entradas[dataStr] = 0;
+                saidas[dataStr] = 0;
+            }
+            
+            // Contabilizar movimentações
+            produtos.forEach(p => {
+                if (!p.lotes || p.lotes.length === 0) return;
+                p.lotes.forEach(lote => {
+                    const partesData = lote.data.split('/');
+                    const dataLote = new Date(partesData[2], partesData[1] - 1, partesData[0]);
+                    
+                    if (dataLote >= dataInicio) {
+                        const dataStr = dataLote.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        if (lote.tipo === 'entrada') {
+                            if (entradas[dataStr] !== undefined) entradas[dataStr] += lote.qtd;
+                        } else if (lote.tipo === 'saida') {
+                            if (saidas[dataStr] !== undefined) saidas[dataStr] += lote.qtd;
+                        }
+                    }
+                });
+            });
+            
+            return { entradas, saidas };
+        }
+        
+        function atualizarGrafico(dias) {
+            currentPeriod = dias;
+            
+            // Atualizar tabs
+            document.querySelectorAll('.period-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const { entradas, saidas } = calcularMovimentacaoPeriodo(dias);
+            const labels = Object.keys(entradas);
+            const dataEntradas = Object.values(entradas);
+            const dataSaidas = Object.values(saidas);
+            
+            const ctx = document.getElementById('movimentacaoChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Entradas',
+                            data: dataEntradas,
+                            borderColor: 'rgb(52, 211, 153)',
+                            backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Saídas',
+                            data: dataSaidas,
+                            borderColor: 'rgb(251, 113, 133)',
+                            backgroundColor: 'rgba(251, 113, 133, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: `Movimentação dos últimos ${dias} dias`,
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Inicializar gráfico com 7 dias
+        setTimeout(() => {
+            if (window.Chart) {
+                atualizarGrafico(7);
+            }
+        }, 500);
         
         // Registrar Service Worker para PWA (somente em http/https ou localhost)
         if ('serviceWorker' in navigator) {
