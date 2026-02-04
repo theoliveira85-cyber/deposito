@@ -478,6 +478,11 @@
             return produto.volume === '5L' ? 42 : 12;
         }
         
+        function salvarDados() {
+            localStorage.setItem('produtosEstoque', JSON.stringify(produtos));
+            console.log('Dados salvos no localStorage:', produtos.length, 'produtos');
+        }
+        
         function atualizarEstatisticas() {
             const totalUnidades = produtos.reduce((sum, p) => sum + (p.qtd * obterUnidades(p)), 0);
             const valorTotal = produtos.reduce((sum, p) => sum + (p.qtd * p.preco), 0);
