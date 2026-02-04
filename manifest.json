@@ -1,19 +1,21 @@
 {
-  "name": "Dashboard de Estoque - Produtos de Limpeza",
-  "short_name": "Estoque",
-  "start_url": "/deposito.html",
+  "name": "Galpao Seu Vital - Controle de Estoque",
+  "short_name": "Galpao Vital",
+  "start_url": "./",
   "display": "standalone",
-  "theme_color": "#2c3e50",
+  "theme_color": "#667eea",
   "background_color": "#ffffff",
+  "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%232c3e50' width='192' height='192'/%3E%3Ctext x='96' y='120' font-size='80' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 192 192%27%3E%3Crect fill=%27%23667eea%27 width=%27192%27 height=%27192%27/%3E%3Ctext x=%2796%27 y=%27120%27 font-size=%2780%27 font-weight=%27bold%27 fill=%27%23ffffff%27 text-anchor=%27middle%27%3E📦%3C/text%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%232c3e50' width='512' height='512'/%3E%3Ctext x='256' y='380' font-size='200' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3E%F0%9F%93%A6%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect fill=%27%23667eea%27 width=%27512%27 height=%27512%27/%3E%3Ctext x=%27256%27 y=%27380%27 font-size=%27200%27 font-weight=%27bold%27 fill=%27%23ffffff%27 text-anchor=%27middle%27%3E📦%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
