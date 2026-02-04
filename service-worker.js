@@ -1,11 +1,13 @@
-const CACHE_NAME = 'estoque-app-v2';
+const CACHE_NAME = 'estoque-app-v3';
 const urlsToCache = [
   '/',
   '/deposito.html',
   '/manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js'
 ];
 
 self.addEventListener('install', event => {

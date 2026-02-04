@@ -17,6 +17,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -425,9 +430,28 @@
     </div>
     
     <script>
-        // Carregar dados salvos ou usar dados iniciais
-        let produtos = JSON.parse(localStorage.getItem('produtosEstoque')) || [
-            // Desinfetantes
+        // Configuração Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7pFuWi09QI8lnbtP6sTMBnGSzdoLqEi8",
+            authDomain: "estoque-seu-vital.firebaseapp.com",
+            databaseURL: "https://estoque-seu-vital-default-rtdb.firebaseio.com",
+            projectId: "estoque-seu-vital",
+            storageBucket: "estoque-seu-vital.firebasestorage.app",
+            messagingSenderId: "367151266329",
+            appId: "1:367151266329:web:f22ec128e36caffc624888",
+            measurementId: "G-TXM7NCNPC3"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const produtosRef = database.ref('produtos');
+        
+        // Variável global de produtos
+        let produtos = [];
+        
+        // Dados iniciais (usados apenas se Firebase estiver vazio)
+        const produtosIniciais = [
             { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 15, preco: 5.50, lotes: [] },
             { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 12.00, lotes: [] },
             { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 12, preco: 4.80, lotes: [] },
@@ -474,13 +498,49 @@
             { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 13.50, lotes: [] }
         ];
         
+        // ===== FUNÇÕES FIREBASE =====
+        
+        // Carregar produtos do Firebase
+        function carregarProdutos() {
+            produtosRef.once('value', (snapshot) => {
+                const dados = snapshot.val();
+                if (dados && Array.isArray(dados) && dados.length > 0) {
+                    produtos = dados;
+                    console.log('✅ Produtos carregados do Firebase:', produtos.length);
+                } else {
+                    // Se Firebase vazio, usar dados iniciais
+                    produtos = produtosIniciais;
+                    salvarDados(); // Salvar dados iniciais no Firebase
+                    console.log('📦 Dados iniciais carregados e salvos no Firebase');
+                }
+                renderizarTabela();
+                inicializarGrafico();
+            });
+        }
+        
+        // Listener em tempo real - atualiza quando alguém modificar
+        produtosRef.on('value', (snapshot) => {
+            const dados = snapshot.val();
+            if (dados && Array.isArray(dados)) {
+                produtos = dados;
+                renderizarTabela();
+                console.log('🔄 Dados atualizados em tempo real!');
+            }
+        });
+        
         function obterUnidades(produto) {
             return produto.volume === '5L' ? 42 : 12;
         }
         
         function salvarDados() {
-            localStorage.setItem('produtosEstoque', JSON.stringify(produtos));
-            console.log('Dados salvos no localStorage:', produtos.length, 'produtos');
+            produtosRef.set(produtos)
+                .then(() => {
+                    console.log('✅ Dados salvos no Firebase (sincronizado em tempo real)');
+                })
+                .catch((error) => {
+                    console.error('❌ Erro ao salvar no Firebase:', error);
+                    alert('Erro ao salvar dados. Verifique sua conexão com a internet.');
+                });
         }
         
         function atualizarEstatisticas() {
@@ -678,9 +738,10 @@
         }
         
         function limparDados() {
-            if (confirm('ATENÇÃO: Isso vai apagar TODOS os dados salvos e voltar aos dados iniciais. Confirma?')) {
-                localStorage.removeItem('produtosEstoque');
-                location.reload();
+            if (confirm('ATENÇÃO: Isso vai apagar TODOS os dados do Firebase e voltar aos dados iniciais. Todos os usuários serão afetados. Confirma?')) {
+                produtos = produtosIniciais;
+                salvarDados();
+                alert('Dados resetados com sucesso!');
             }
         }
         
@@ -786,8 +847,6 @@
         window.addEventListener('offline', updateExportButtons);
         // Check availability periodically (in case scripts get cached)
         setTimeout(updateExportButtons, 500);
-        
-        renderizarTabela();
         
         // ===== GRÁFICOS =====
         let chartInstance = null;
@@ -908,12 +967,23 @@
             });
         }
         
-        // Inicializar gráfico com 7 dias
-        setTimeout(() => {
-            if (window.Chart) {
-                atualizarGrafico(7);
-            }
-        }, 500);
+        // Função para inicializar gráfico (chamada após carregar dados)
+        function inicializarGrafico() {
+            setTimeout(() => {
+                if (window.Chart) {
+                    atualizarGrafico(7);
+                }
+            }, 500);
+        }
+        
+        // ===== INICIALIZAÇÃO =====
+        // Carregar produtos do Firebase ao iniciar
+        carregarProdutos();
+        
+        // Listener de busca
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            renderizarTabela();
+        });
         
         // Registrar Service Worker para PWA (somente em http/https ou localhost)
         if ('serviceWorker' in navigator) {
