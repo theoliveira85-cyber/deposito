@@ -417,6 +417,7 @@
             <div class="export-buttons">
                 <button class="btn-export" onclick="exportarExcel()">📊 Exportar (CSV)</button>
                 <button class="btn-export pdf" onclick="exportarPDF()">📄 Exportar para PDF</button>
+                <button class="btn-export" onclick="limparDados()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🔄 Resetar Dados</button>
             </div>
             
             <div id="tabelaProdutosAgrupada"></div>
@@ -627,7 +628,9 @@
             const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
             if (qtd > 0) {
                 const unidades = obterUnidades(p);
+                const qtdAnterior = p.qtd;
                 p.qtd += Math.ceil(qtd / unidades);
+                console.log(`ENTRADA: ${p.nome} (${p.volume}) - Unidades: ${qtd}, Caixas/Andares adicionados: ${Math.ceil(qtd / unidades)}, Qtd antes: ${qtdAnterior}, Qtd depois: ${p.qtd}`);
                 if (!p.lotes) p.lotes = [];
                 p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
                 salvarDados();
@@ -643,7 +646,9 @@
             const totalDisponivel = p.qtd * unidades;
             
             if (qtd > 0 && qtd <= totalDisponivel) {
+                const qtdAnterior = p.qtd;
                 p.qtd -= Math.ceil(qtd / unidades);
+                console.log(`SAÍDA: ${p.nome} (${p.volume}) - Unidades retiradas: ${qtd}, Caixas/Andares removidos: ${Math.ceil(qtd / unidades)}, Qtd antes: ${qtdAnterior}, Qtd depois: ${p.qtd}`);
                 if (!p.lotes) p.lotes = [];
                 p.lotes.push({ numero: 'N/A', data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
                 salvarDados();
@@ -665,6 +670,13 @@
                 historico += `${l.data} - ${l.tipo.toUpperCase()}: ${l.qtd} un (Lote: ${l.numero})\n`;
             });
             alert(historico);
+        }
+        
+        function limparDados() {
+            if (confirm('ATENÇÃO: Isso vai apagar TODOS os dados salvos e voltar aos dados iniciais. Confirma?')) {
+                localStorage.removeItem('produtosEstoque');
+                location.reload();
+            }
         }
         
         function exportarExcel() {
