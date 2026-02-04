@@ -217,6 +217,57 @@
             padding: 5px 0;
             border-bottom: 1px solid #ecf0f1;
         }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .controls input,
+            .controls button {
+                width: 100%;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .filters select {
+                width: 100%;
+            }
+            
+            .export-buttons {
+                flex-direction: column;
+            }
+            
+            .export-buttons button {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            .btn-small {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -268,52 +319,53 @@
     </div>
     
     <script>
-        let produtos = [
+        // Carregar dados salvos ou usar dados iniciais
+        let produtos = JSON.parse(localStorage.getItem('produtosEstoque')) || [
             // Desinfetantes
-            { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 15, preco: 5.50 },
-            { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 12.00 },
-            { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 12, preco: 4.80 },
-            { id: 4, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 10.50 },
-            { id: 5, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '2L', qtd: 18, preco: 4.20 },
-            { id: 6, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '5L', qtd: 9, preco: 9.80 },
-            { id: 7, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '2L', qtd: 10, preco: 6.00 },
-            { id: 8, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '5L', qtd: 5, preco: 13.50 },
-            { id: 9, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '2L', qtd: 14, preco: 5.20 },
-            { id: 10, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.50 },
-            { id: 11, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '2L', qtd: 16, preco: 4.90 },
-            { id: 12, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 10.80 },
-            { id: 13, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '2L', qtd: 11, preco: 5.40 },
-            { id: 14, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 12.00 },
-            { id: 15, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '2L', qtd: 13, preco: 5.10 },
-            { id: 16, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.20 },
-            { id: 17, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '2L', qtd: 19, preco: 4.70 },
-            { id: 18, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '5L', qtd: 10, preco: 10.50 },
+            { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 15, preco: 5.50, lotes: [] },
+            { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 12.00, lotes: [] },
+            { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 12, preco: 4.80, lotes: [] },
+            { id: 4, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 10.50, lotes: [] },
+            { id: 5, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '2L', qtd: 18, preco: 4.20, lotes: [] },
+            { id: 6, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '5L', qtd: 9, preco: 9.80, lotes: [] },
+            { id: 7, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '2L', qtd: 10, preco: 6.00, lotes: [] },
+            { id: 8, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '5L', qtd: 5, preco: 13.50, lotes: [] },
+            { id: 9, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '2L', qtd: 14, preco: 5.20, lotes: [] },
+            { id: 10, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.50, lotes: [] },
+            { id: 11, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '2L', qtd: 16, preco: 4.90, lotes: [] },
+            { id: 12, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 10.80, lotes: [] },
+            { id: 13, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '2L', qtd: 11, preco: 5.40, lotes: [] },
+            { id: 14, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 12.00, lotes: [] },
+            { id: 15, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '2L', qtd: 13, preco: 5.10, lotes: [] },
+            { id: 16, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.20, lotes: [] },
+            { id: 17, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '2L', qtd: 19, preco: 4.70, lotes: [] },
+            { id: 18, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '5L', qtd: 10, preco: 10.50, lotes: [] },
             
             // Amaciantes
-            { id: 19, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '2L', qtd: 20, preco: 6.80 },
-            { id: 20, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '5L', qtd: 12, preco: 15.00 },
-            { id: 21, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '2L', qtd: 18, preco: 6.50 },
-            { id: 22, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '5L', qtd: 10, preco: 14.50 },
-            { id: 23, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '2L', qtd: 22, preco: 6.20 },
-            { id: 24, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '5L', qtd: 14, preco: 13.80 },
+            { id: 19, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '2L', qtd: 20, preco: 6.80, lotes: [] },
+            { id: 20, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '5L', qtd: 12, preco: 15.00, lotes: [] },
+            { id: 21, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '2L', qtd: 18, preco: 6.50, lotes: [] },
+            { id: 22, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '5L', qtd: 10, preco: 14.50, lotes: [] },
+            { id: 23, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '2L', qtd: 22, preco: 6.20, lotes: [] },
+            { id: 24, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '5L', qtd: 14, preco: 13.80, lotes: [] },
             
             // Lava Roupas
-            { id: 25, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '2L', qtd: 25, preco: 7.50 },
-            { id: 26, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '5L', qtd: 15, preco: 16.50 },
-            { id: 27, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '2L', qtd: 21, preco: 7.20 },
-            { id: 28, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '5L', qtd: 13, preco: 16.00 },
-            { id: 29, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '2L', qtd: 23, preco: 7.80 },
-            { id: 30, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '5L', qtd: 14, preco: 17.00 },
+            { id: 25, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '2L', qtd: 25, preco: 7.50, lotes: [] },
+            { id: 26, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '5L', qtd: 15, preco: 16.50, lotes: [] },
+            { id: 27, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '2L', qtd: 21, preco: 7.20, lotes: [] },
+            { id: 28, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '5L', qtd: 13, preco: 16.00, lotes: [] },
+            { id: 29, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '2L', qtd: 23, preco: 7.80, lotes: [] },
+            { id: 30, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '5L', qtd: 14, preco: 17.00, lotes: [] },
             
             // Lava Louças
-            { id: 31, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '2L', qtd: 28, preco: 5.80 },
-            { id: 32, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 12.50 },
-            { id: 33, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '2L', qtd: 26, preco: 6.10 },
-            { id: 34, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '5L', qtd: 15, preco: 13.20 },
-            { id: 35, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '2L', qtd: 24, preco: 5.90 },
-            { id: 36, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '5L', qtd: 14, preco: 12.80 },
-            { id: 37, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '2L', qtd: 27, preco: 6.30 },
-            { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 13.50 }
+            { id: 31, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '2L', qtd: 28, preco: 5.80, lotes: [] },
+            { id: 32, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 12.50, lotes: [] },
+            { id: 33, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '2L', qtd: 26, preco: 6.10, lotes: [] },
+            { id: 34, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '5L', qtd: 15, preco: 13.20, lotes: [] },
+            { id: 35, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '2L', qtd: 24, preco: 5.90, lotes: [] },
+            { id: 36, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '5L', qtd: 14, preco: 12.80, lotes: [] },
+            { id: 37, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '2L', qtd: 27, preco: 6.30, lotes: [] },
+            { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 13.50, lotes: [] }
         ];
         
         function obterUnidades(produto) {
@@ -439,12 +491,14 @@
                 preco,
                 lotes: []
             });
+            salvarDados();
             renderizarTabela();
         }
         
         function deletarProduto(id) {
             if (confirm('Confirmar exclusão?')) {
                 produtos = produtos.filter(p => p.id !== id);
+                salvarDados();
                 renderizarTabela();
             }
         }
@@ -455,6 +509,7 @@
             const novaQtd = parseInt(prompt('Nova quantidade:', p.qtd));
             if (novaQtd !== null && novaQtd >= 0) {
                 p.qtd = novaQtd;
+                salvarDados();
                 renderizarTabela();
             }
         }
@@ -469,6 +524,7 @@
                 p.qtd += qtd;
                 if (!p.lotes) p.lotes = [];
                 p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
+                salvarDados();
                 renderizarTabela();
             }
         }
@@ -476,16 +532,15 @@
         function saidaMercadoria(id) {
             const p = produtos.find(x => x.id === id);
             if (!p) return;
-            const lote = prompt('Número do lote:');
-            if (!lote) return;
-            const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
+            const qtd = parseInt(prompt('Quantidade de unidades a retirar:')) || 0;
             const unidades = obterUnidades(p);
             const totalDisponivel = p.qtd * unidades;
             
             if (qtd > 0 && qtd <= totalDisponivel) {
                 p.qtd -= Math.ceil(qtd / unidades);
                 if (!p.lotes) p.lotes = [];
-                p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
+                p.lotes.push({ numero: 'N/A', data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
+                salvarDados();
                 renderizarTabela();
             } else {
                 alert(`Quantidade inválida! Disponível: ${totalDisponivel} un`);
