@@ -626,7 +626,8 @@
             if (!lote) return;
             const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
             if (qtd > 0) {
-                p.qtd += qtd;
+                const unidades = obterUnidades(p);
+                p.qtd += Math.ceil(qtd / unidades);
                 if (!p.lotes) p.lotes = [];
                 p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
                 salvarDados();
