@@ -320,49 +320,141 @@
             }
             
             h1 {
-                font-size: 20px;
+                font-size: 18px;
+                text-align: center;
             }
             
             .stats {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 12px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-card h3 {
+                font-size: 12px;
+            }
+            
+            .stat-card .number {
+                font-size: 28px;
             }
             
             .controls {
                 flex-direction: column;
-                gap: 10px;
+                gap: 12px;
             }
             
             .controls input,
             .controls button {
                 width: 100%;
+                padding: 14px;
+                font-size: 16px;
             }
             
             .filters {
                 flex-direction: column;
-                gap: 8px;
+                gap: 10px;
             }
             
             .filters select {
                 width: 100%;
+                padding: 14px;
+                font-size: 16px;
             }
             
             .export-buttons {
                 flex-direction: column;
+                gap: 10px;
             }
             
             .export-buttons button {
                 width: 100%;
+                padding: 14px;
+                font-size: 16px;
             }
             
+            /* Esconder tabela e mostrar cards no mobile */
             table {
-                font-size: 12px;
+                display: none;
             }
             
-            .btn-small {
-                padding: 4px 8px;
-                font-size: 11px;
+            .mobile-card {
+                display: block !important;
+                background: white;
+                padding: 16px;
+                margin-bottom: 12px;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
+            
+            .mobile-card-header {
+                font-weight: bold;
+                font-size: 16px;
+                color: #2c3e50;
+                margin-bottom: 12px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #ecf0f1;
+            }
+            
+            .mobile-card-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                font-size: 14px;
+            }
+            
+            .mobile-card-label {
+                color: #7f8c8d;
+                font-weight: 600;
+            }
+            
+            .mobile-card-value {
+                color: #2c3e50;
+                font-weight: bold;
+            }
+            
+            .mobile-card-actions {
+                display: flex;
+                gap: 8px;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid #ecf0f1;
+            }
+            
+            .mobile-card-actions button {
+                flex: 1;
+                padding: 12px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            
+            .period-tabs {
+                gap: 8px;
+            }
+            
+            .period-tab {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .dashboard-section {
+                padding: 20px;
+            }
+            
+            .table-container {
+                padding: 20px;
+            }
+        }
+        
+        /* Cards mobile - escondidos por padrão */
+        .mobile-card {
+            display: none;
         }
     </style>
 </head>
@@ -613,10 +705,12 @@
                         const unidades = obterUnidades(p);
                         const totalUnidades = p.qtd * unidades;
                         const total = (p.qtd * p.preco).toFixed(2);
-                        const lowStock = totalUnidades <= 42 ? 'background: #fadbd8;' : '';
+                        const lowStock = totalUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const lowStockStyle = lowStock ? 'background: #fadbd8;' : '';
                         
+                        // Renderizar linha da tabela (desktop)
                         htmlCategoria += `
-                            <tr style="${lowStock}">
+                            <tr style="${lowStockStyle}">
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${p.nome}</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${totalUnidades} un</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${p.preco.toFixed(2)}</td>
@@ -630,7 +724,45 @@
                         `;
                     });
                     
-                    htmlCategoria += `</tbody></table></div>`;
+                    htmlCategoria += `</tbody></table>`;
+                    
+                    // Renderizar cards (mobile)
+                    produtos_volume.forEach(p => {
+                        const unidades = obterUnidades(p);
+                        const totalUnidades = p.qtd * unidades;
+                        const total = (p.qtd * p.preco).toFixed(2);
+                        const lowStock = totalUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const alertIcon = lowStock ? ' ⚠️' : '';
+                        
+                        htmlCategoria += `
+                            <div class="mobile-card" style="${lowStock ? 'border-left: 4px solid #e74c3c;' : ''}">
+                                <div class="mobile-card-header">${p.nome}${alertIcon}</div>
+                                <div class="mobile-card-row">
+                                    <span class="mobile-card-label">Volume:</span>
+                                    <span class="mobile-card-value">${p.volume}</span>
+                                </div>
+                                <div class="mobile-card-row">
+                                    <span class="mobile-card-label">Quantidade:</span>
+                                    <span class="mobile-card-value">${totalUnidades} un</span>
+                                </div>
+                                <div class="mobile-card-row">
+                                    <span class="mobile-card-label">Preço Unit.:</span>
+                                    <span class="mobile-card-value">R$ ${p.preco.toFixed(2)}</span>
+                                </div>
+                                <div class="mobile-card-row">
+                                    <span class="mobile-card-label">Total:</span>
+                                    <span class="mobile-card-value">R$ ${total}</span>
+                                </div>
+                                <div class="mobile-card-actions">
+                                    <button onclick="entradaMercadoria(${p.id})" style="background:#27ae60; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">+ Entrada</button>
+                                    <button onclick="saidaMercadoria(${p.id})" style="background:#e74c3c; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">- Saída</button>
+                                    <button onclick="visualizarHistorico(${p.id})" style="background:#9b59b6; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">📋</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    htmlCategoria += `</div>`;
                 });
                 
                 divCategoria.innerHTML = htmlCategoria;
