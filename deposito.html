@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Estoque">
+    <meta name="msapplication-TileColor" content="#2c3e50">
+    <meta name="msapplication-config" content="browserconfig.xml">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c3e50' width='192' height='192'/><text x='96' y='120' font-size='80' font-weight='bold' fill='%23ffffff' text-anchor='middle'>📦</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c3e50' width='192' height='192' rx='45'/><text x='96' y='120' font-size='80' font-weight='bold' fill='%23ffffff' text-anchor='middle'>📦</text></svg>">
+    <title>Dashboard - Estoque Deposito</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 28px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        input, button {
+            padding: 10px 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #229954;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #ecf0f1;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .low-stock {
+            background: #fadbd8;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #3498db;
+            margin-right: 5px;
+        }
+        
+        .btn-small:hover {
+            background: #2980b9;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-export {
+            padding: 10px 20px;
+            background: #16a085;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-export:hover {
+            background: #138d75;
+        }
+        
+        .btn-export.pdf {
+            background: #e74c3c;
+        }
+        
+        .btn-export.pdf:hover {
+            background: #c0392b;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filters select {
+            padding: 10px 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .category-group {
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        
+        .category-title {
+            background: #ecf0f1;
+            padding: 10px 15px;
+            margin: -15px -15px 15px -15px;
+            font-weight: bold;
+            color: #2c3e50;
+            border-radius: 4px 0 0 0;
+        }
+        
+        .volume-subgroup {
+            margin-bottom: 15px;
+        }
+        
+        .volume-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: 600;
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Dashboard de Estoque - Produtos de Limpeza</h1>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total de Produtos</h3>
+                <div class="number" id="totalProdutos">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Valor Total em Estoque</h3>
+                <div class="number" id="valorTotal">R$ 0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Produtos com Baixo Estoque</h3>
+                <div class="number" id="baixoEstoque">0</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <div class="controls">
+                <input type="text" id="searchInput" placeholder="Buscar produto...">
+                <button onclick="adicionarProduto()">+ Adicionar Produto</button>
+            </div>
+            
+            <div class="filters">
+                <label style="font-weight: 600; color: #2c3e50;">Filtrar por:</label>
+                <select id="filterCategoria" onchange="renderizarTabela()">
+                    <option value="">Todas as Categorias</option>
+                </select>
+                <select id="filterVolume" onchange="renderizarTabela()">
+                    <option value="">Todos os Volumes</option>
+                    <option value="2L">2L</option>
+                    <option value="5L">5L</option>
+                </select>
+            </div>
+            
+            <div class="export-buttons">
+                <button class="btn-export" onclick="exportarExcel()">📊 Exportar (CSV)</button>
+                <button class="btn-export pdf" onclick="exportarPDF()">📄 Exportar para PDF</button>
+            </div>
+            
+            <div id="tabelaProdutosAgrupada"></div>
+        </div>
+    </div>
+    
+    <script>
+        let produtos = [
+            // Desinfetantes
+            { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 15, preco: 5.50 },
+            { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 12.00 },
+            { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 12, preco: 4.80 },
+            { id: 4, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 10.50 },
+            { id: 5, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '2L', qtd: 18, preco: 4.20 },
+            { id: 6, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '5L', qtd: 9, preco: 9.80 },
+            { id: 7, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '2L', qtd: 10, preco: 6.00 },
+            { id: 8, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '5L', qtd: 5, preco: 13.50 },
+            { id: 9, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '2L', qtd: 14, preco: 5.20 },
+            { id: 10, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.50 },
+            { id: 11, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '2L', qtd: 16, preco: 4.90 },
+            { id: 12, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 10.80 },
+            { id: 13, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '2L', qtd: 11, preco: 5.40 },
+            { id: 14, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 12.00 },
+            { id: 15, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '2L', qtd: 13, preco: 5.10 },
+            { id: 16, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.20 },
+            { id: 17, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '2L', qtd: 19, preco: 4.70 },
+            { id: 18, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '5L', qtd: 10, preco: 10.50 },
+            
+            // Amaciantes
+            { id: 19, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '2L', qtd: 20, preco: 6.80 },
+            { id: 20, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '5L', qtd: 12, preco: 15.00 },
+            { id: 21, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '2L', qtd: 18, preco: 6.50 },
+            { id: 22, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '5L', qtd: 10, preco: 14.50 },
+            { id: 23, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '2L', qtd: 22, preco: 6.20 },
+            { id: 24, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '5L', qtd: 14, preco: 13.80 },
+            
+            // Lava Roupas
+            { id: 25, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '2L', qtd: 25, preco: 7.50 },
+            { id: 26, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '5L', qtd: 15, preco: 16.50 },
+            { id: 27, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '2L', qtd: 21, preco: 7.20 },
+            { id: 28, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '5L', qtd: 13, preco: 16.00 },
+            { id: 29, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '2L', qtd: 23, preco: 7.80 },
+            { id: 30, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '5L', qtd: 14, preco: 17.00 },
+            
+            // Lava Louças
+            { id: 31, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '2L', qtd: 28, preco: 5.80 },
+            { id: 32, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 12.50 },
+            { id: 33, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '2L', qtd: 26, preco: 6.10 },
+            { id: 34, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '5L', qtd: 15, preco: 13.20 },
+            { id: 35, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '2L', qtd: 24, preco: 5.90 },
+            { id: 36, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '5L', qtd: 14, preco: 12.80 },
+            { id: 37, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '2L', qtd: 27, preco: 6.30 },
+            { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 13.50 }
+        ];
+        
+        function obterUnidades(produto) {
+            return produto.volume === '5L' ? 42 : 1;
+        }
+        
+        function atualizarEstatisticas() {
+            const totalUnidades = produtos.reduce((sum, p) => sum + (p.qtd * obterUnidades(p)), 0);
+            const valorTotal = produtos.reduce((sum, p) => sum + (p.qtd * p.preco), 0);
+            const estoqueCritico = produtos.filter(p => (p.qtd * obterUnidades(p)) <= 42).length;
+            
+            document.getElementById('totalProdutos').textContent = totalUnidades;
+            document.getElementById('valorTotal').textContent = 'R$ ' + valorTotal.toFixed(2);
+            document.getElementById('baixoEstoque').textContent = estoqueCritico;
+        }
+        
+        function renderizarTabela(filtro = '') {
+            const container = document.getElementById('tabelaProdutosAgrupada');
+            const filterCategoria = document.getElementById('filterCategoria').value;
+            const filterVolume = document.getElementById('filterVolume').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            // Filtrar produtos
+            let produtosFiltrados = produtos.filter(p => {
+                const matchBusca = p.nome.toLowerCase().includes(searchTerm);
+                const matchCategoria = filterCategoria === '' || p.categoria === filterCategoria;
+                const matchVolume = filterVolume === '' || p.volume === filterVolume;
+                return matchBusca && matchCategoria && matchVolume;
+            });
+            
+            // Agrupar por categoria
+            const gruposPorCategoria = {};
+            produtosFiltrados.forEach(p => {
+                if (!gruposPorCategoria[p.categoria]) {
+                    gruposPorCategoria[p.categoria] = {};
+                }
+                if (!gruposPorCategoria[p.categoria][p.volume]) {
+                    gruposPorCategoria[p.categoria][p.volume] = [];
+                }
+                gruposPorCategoria[p.categoria][p.volume].push(p);
+            });
+            
+            // Renderizar categorias
+            container.innerHTML = '';
+            Object.keys(gruposPorCategoria).sort().forEach(categoria => {
+                const divCategoria = document.createElement('div');
+                divCategoria.className = 'category-group';
+                
+                let htmlCategoria = `<div class="category-title">📁 ${categoria}</div>`;
+                
+                // Renderizar volumes dentro da categoria
+                Object.keys(gruposPorCategoria[categoria]).sort().forEach(volume => {
+                    const produtos_volume = gruposPorCategoria[categoria][volume];
+                    htmlCategoria += `<div class="volume-subgroup"><div class="volume-label">Volume: ${volume}</div>`;
+                    
+                    htmlCategoria += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                        <thead>
+                            <tr style="background: #ecf0f1;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Produto</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Quantidade</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Preço Unit.</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Total</th>
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                    
+                    produtos_volume.forEach(p => {
+                        const unidades = obterUnidades(p);
+                        const totalUnidades = p.qtd * unidades;
+                        const total = (p.qtd * p.preco).toFixed(2);
+                        const lowStock = totalUnidades <= 42 ? 'background: #fadbd8;' : '';
+                        
+                        htmlCategoria += `
+                            <tr style="${lowStock}">
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${p.nome}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${totalUnidades} un</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${p.preco.toFixed(2)}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${total}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                                    <button class="btn-small" onclick="entradaMercadoria(${p.id})">Entrada</button>
+                                    <button class="btn-small" onclick="saidaMercadoria(${p.id})" style="background:#f39c12">Saída</button>
+                                    <button class="btn-small" onclick="editarProduto(${p.id})">Editar</button>
+                                    <button class="btn-small" onclick="deletarProduto(${p.id})" style="background:#e74c3c">Deletar</button>
+                                    <button class="btn-small" onclick="visualizarHistorico(${p.id})" style="background:#9b59b6">Histórico</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    htmlCategoria += `</tbody></table></div>`;
+                });
+                
+                divCategoria.innerHTML = htmlCategoria;
+                container.appendChild(divCategoria);
+            });
+            
+            // Preencher filtro de categorias
+            const categorias = [...new Set(produtos.map(p => p.categoria))].sort();
+            const selectCategoria = document.getElementById('filterCategoria');
+            const categoriaAtual = selectCategoria.value;
+            selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>';
+            categorias.forEach(cat => {
+                selectCategoria.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+            selectCategoria.value = categoriaAtual;
+            
+            atualizarEstatisticas();
+        }
+        
+        function adicionarProduto() {
+            const nome = prompt('Nome do produto:');
+            if (!nome) return;
+            const qtd = parseInt(prompt('Quantidade:')) || 0;
+            const preco = parseFloat(prompt('Preço unitário:')) || 0;
+            
+            produtos.push({
+                id: Date.now(),
+                nome,
+                categoria: 'Outros',
+                volume: '2L',
+                qtd,
+                preco,
+                lotes: []
+            });
+            renderizarTabela();
+        }
+        
+        function deletarProduto(id) {
+            if (confirm('Confirmar exclusão?')) {
+                produtos = produtos.filter(p => p.id !== id);
+                renderizarTabela();
+            }
+        }
+        
+        function editarProduto(id) {
+            const p = produtos.find(x => x.id === id);
+            if (!p) return;
+            const novaQtd = parseInt(prompt('Nova quantidade:', p.qtd));
+            if (novaQtd !== null && novaQtd >= 0) {
+                p.qtd = novaQtd;
+                renderizarTabela();
+            }
+        }
+        
+        function entradaMercadoria(id) {
+            const p = produtos.find(x => x.id === id);
+            if (!p) return;
+            const lote = prompt('Número do lote:');
+            if (!lote) return;
+            const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
+            if (qtd > 0) {
+                p.qtd += qtd;
+                if (!p.lotes) p.lotes = [];
+                p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
+                renderizarTabela();
+            }
+        }
+        
+        function saidaMercadoria(id) {
+            const p = produtos.find(x => x.id === id);
+            if (!p) return;
+            const lote = prompt('Número do lote:');
+            if (!lote) return;
+            const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
+            const unidades = obterUnidades(p);
+            const totalDisponivel = p.qtd * unidades;
+            
+            if (qtd > 0 && qtd <= totalDisponivel) {
+                p.qtd -= Math.ceil(qtd / unidades);
+                if (!p.lotes) p.lotes = [];
+                p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
+                renderizarTabela();
+            } else {
+                alert(`Quantidade inválida! Disponível: ${totalDisponivel} un`);
+            }
+        }
+        
+        function visualizarHistorico(id) {
+            const p = produtos.find(x => x.id === id);
+            if (!p || !p.lotes || p.lotes.length === 0) {
+                alert('Nenhum movimento registrado para este produto.');
+                return;
+            }
+            
+            let historico = `Histórico: ${p.nome} (${p.volume})\n\n`;
+            p.lotes.forEach(l => {
+                historico += `${l.data} - ${l.tipo.toUpperCase()}: ${l.qtd} un (Lote: ${l.numero})\n`;
+            });
+            alert(historico);
+        }
+        
+        function exportarExcel() {
+            const dados = produtos.map(p => ({
+                'Produto': p.nome,
+                'Volume': p.volume,
+                'Categoria': p.categoria,
+                'Quantidade': p.qtd,
+                'Unidades Reais': p.qtd * obterUnidades(p),
+                'Preço Unit.': p.preco.toFixed(2),
+                'Total': (p.qtd * p.preco).toFixed(2)
+            }));
+            
+            // Gerar CSV (compatível com Excel)
+            let csv = 'Produto,Volume,Categoria,Quantidade,Unidades Reais,Preço Unit.,Total\n';
+            dados.forEach(d => {
+                csv += `"${d.Produto}","${d.Volume}","${d.Categoria}",${d.Quantidade},${d['Unidades Reais']},${d['Preço Unit.']},${d.Total}\n`;
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Estoque_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
+            link.click();
+        }
+        
+        function exportarPDF() {
+            if (!window.jspdf) {
+                alert('PDF não disponível offline. Conecte-se à internet para exportar em PDF.');
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(16);
+            doc.text('Dashboard de Estoque - Produtos de Limpeza', 14, 15);
+            
+            doc.setFontSize(10);
+            doc.text(`Data: ${new Date().toLocaleDateString()}`, 14, 25);
+            
+            const dados = produtos.map(p => [
+                p.nome,
+                p.volume,
+                p.categoria,
+                p.qtd,
+                p.qtd * obterUnidades(p),
+                'R$ ' + p.preco.toFixed(2),
+                'R$ ' + (p.qtd * p.preco).toFixed(2)
+            ]);
+            
+            doc.autoTable({
+                head: [['Produto', 'Volume', 'Categoria', 'Qtd', 'Un. Reais', 'Preço Unit.', 'Total']],
+                body: dados,
+                startY: 35,
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 5
+                },
+                headStyles: {
+                    fillColor: [44, 62, 80],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                }
+            });
+            
+            const totalProdutos = produtos.reduce((sum, p) => sum + p.qtd, 0);
+            const valorTotal = produtos.reduce((sum, p) => sum + (p.qtd * p.preco), 0);
+            const finalY = doc.lastAutoTable.finalY + 10;
+            
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Total de Produtos: ${totalProdutos}`, 14, finalY);
+            doc.text(`Valor Total em Estoque: R$ ${valorTotal.toFixed(2)}`, 14, finalY + 7);
+            
+            doc.save(`Estoque_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
+        }
+        
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            renderizarTabela();
+        });
+
+        // Disable/enable PDF export button based on availability
+        function updateExportButtons() {
+            const btnPdf = document.querySelector('.btn-export.pdf');
+            if (!btnPdf) return;
+            if (navigator.onLine && window.jspdf) {
+                btnPdf.disabled = false;
+                btnPdf.style.opacity = 1;
+                btnPdf.title = '';
+            } else {
+                btnPdf.disabled = true;
+                btnPdf.style.opacity = 0.6;
+                btnPdf.title = 'PDF export requires internet connection and jsPDF';
+            }
+        }
+
+        window.addEventListener('online', updateExportButtons);
+        window.addEventListener('offline', updateExportButtons);
+        // Check availability periodically (in case scripts get cached)
+        setTimeout(updateExportButtons, 500);
+        
+        renderizarTabela();
+        
+        // Registrar Service Worker para PWA (somente em http/https ou localhost)
+        if ('serviceWorker' in navigator) {
+            const allowed = (location.protocol === 'http:' || location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+            if (!allowed) {
+                console.warn('Service Worker não será registrado: página aberta via file:// (origem null). Sirva o arquivo via http/https (ex: python -m http.server) para habilitar o PWA.');
+                // opcional: mostrar dica ao usuário
+                if (!document.getElementById('pwaHint')) {
+                    const hint = document.createElement('div');
+                    hint.id = 'pwaHint';
+                    hint.style.position = 'fixed';
+                    hint.style.right = '12px';
+                    hint.style.bottom = '12px';
+                    hint.style.padding = '10px 14px';
+                    hint.style.background = '#f39c12';
+                    hint.style.color = '#fff';
+                    hint.style.borderRadius = '6px';
+                    hint.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                    hint.textContent = 'PWA desativado: abra via http://localhost:8000 para habilitar offline/instalação.';
+                    document.body.appendChild(hint);
+                }
+            } else {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado:', registration);
+                    })
+                    .catch(error => {
+                        console.log('Erro ao registrar Service Worker:', error);
+                        // mostrar mensagem curta ao usuário
+                        console.error('Service Worker registration failed:', error);
+                    });
+            }
+        }
+        
+        // Detectar quando o app está pronto para ser instalado
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('App está pronto para ser instalado');
+        });
+        
+        // Mostrar mensagem quando instalado
+        window.addEventListener('appinstalled', () => {
+            console.log('Aplicativo instalado com sucesso!');
+            alert('App instalado com sucesso! Você pode agora usar offline.');
+        });
+    </script>
+</body>
+</html>
