@@ -20,6 +20,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -586,6 +587,7 @@
             <div class="controls">
                 <input type="text" id="searchInput" placeholder="Buscar produto...">
                 <button onclick="adicionarProduto()">+ Adicionar Produto</button>
+                <button onclick="mostrarImportarProdutos()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📥 Importar XLSX</button>
             </div>
             
             <div class="filters">
@@ -1429,6 +1431,202 @@
             doc.save(`Estoque_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
         }
         
+        // ===== IMPORTAÇÃO DE PRODUTOS =====
+        let produtosParaImportar = [];
+        
+        function mostrarImportarProdutos() {
+            document.getElementById('modalImportarProdutos').style.display = 'block';
+            document.getElementById('previewImport').style.display = 'none';
+            document.getElementById('nomeArquivoImport').textContent = '';
+            document.getElementById('fileImportInput').value = '';
+        }
+        
+        function fecharImportarProdutos() {
+            document.getElementById('modalImportarProdutos').style.display = 'none';
+            produtosParaImportar = [];
+        }
+        
+        function processarArquivoImportacao() {
+            const fileInput = document.getElementById('fileImportInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            document.getElementById('nomeArquivoImport').textContent = `📄 ${file.name}`;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Pegar primeira planilha
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    if (jsonData.length === 0) {
+                        alert('❌ Arquivo vazio! Por favor, selecione um arquivo com dados.');
+                        return;
+                    }
+                    
+                    // Processar e validar dados
+                    produtosParaImportar = [];
+                    const erros = [];
+                    
+                    jsonData.forEach((row, index) => {
+                        const linha = index + 2; // +2 porque linha 1 é cabeçalho e index começa em 0
+                        
+                        // Validar campos obrigatórios
+                        if (!row.Produto || !row.Categoria || !row.Volume || row.Preco === undefined || row['Estoque Minimo'] === undefined) {
+                            erros.push(`Linha ${linha}: Campos obrigatórios faltando`);
+                            return;
+                        }
+                        
+                        // Validar categoria
+                        const categoriasValidas = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças'];
+                        if (!categoriasValidas.includes(row.Categoria)) {
+                            erros.push(`Linha ${linha}: Categoria inválida "${row.Categoria}"`);
+                            return;
+                        }
+                        
+                        // Validar volume
+                        if (row.Volume !== '2L' && row.Volume !== '5L') {
+                            erros.push(`Linha ${linha}: Volume inválido "${row.Volume}"`);
+                            return;
+                        }
+                        
+                        produtosParaImportar.push({
+                            nome: String(row.Produto).trim(),
+                            categoria: row.Categoria,
+                            volume: row.Volume,
+                            preco: parseFloat(row.Preco) || 0,
+                            estoqueMin: parseInt(row['Estoque Minimo']) || 0,
+                            qtdInicial: parseInt(row['Quantidade Inicial']) || 0
+                        });
+                    });
+                    
+                    if (erros.length > 0) {
+                        alert('❌ Erros encontrados no arquivo:\n\n' + erros.join('\n'));
+                        return;
+                    }
+                    
+                    if (produtosParaImportar.length === 0) {
+                        alert('❌ Nenhum produto válido encontrado no arquivo!');
+                        return;
+                    }
+                    
+                    // Mostrar prévia
+                    mostrarPreviaImportacao();
+                    
+                } catch (error) {
+                    console.error(error);
+                    alert('❌ Erro ao processar arquivo: ' + error.message);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function mostrarPreviaImportacao() {
+            let html = '<table style="width: 100%; border-collapse: collapse; font-size: 13px;">';
+            html += '<thead><tr style="background: #667eea; color: white;">';
+            html += '<th style="padding: 10px; text-align: left;">Produto</th>';
+            html += '<th style="padding: 10px;">Categoria</th>';
+            html += '<th style="padding: 10px;">Volume</th>';
+            html += '<th style="padding: 10px;">Preço</th>';
+            html += '<th style="padding: 10px;">Est. Mín</th>';
+            html += '<th style="padding: 10px;">Qtd Inicial</th>';
+            html += '</tr></thead><tbody>';
+            
+            produtosParaImportar.forEach((p, i) => {
+                const bgColor = i % 2 === 0 ? '#f8fafc' : '#ffffff';
+                html += `<tr style="background: ${bgColor};">`;
+                html += `<td style="padding: 8px;">${p.nome}</td>`;
+                html += `<td style="padding: 8px; text-align: center;">${p.categoria}</td>`;
+                html += `<td style="padding: 8px; text-align: center;">${p.volume}</td>`;
+                html += `<td style="padding: 8px; text-align: center;">R$ ${p.preco.toFixed(2)}</td>`;
+                html += `<td style="padding: 8px; text-align: center;">${p.estoqueMin}</td>`;
+                html += `<td style="padding: 8px; text-align: center;">${p.qtdInicial}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            html += `<p style="margin-top: 15px; font-weight: 600; color: #059669;">✅ ${produtosParaImportar.length} produto(s) pronto(s) para importação</p>`;
+            
+            document.getElementById('previewTabela').innerHTML = html;
+            document.getElementById('previewImport').style.display = 'block';
+        }
+        
+        async function confirmarImportacao() {
+            if (produtosParaImportar.length === 0) {
+                alert('Nenhum produto para importar!');
+                return;
+            }
+            
+            const confirmacao = confirm(`Confirma a importação de ${produtosParaImportar.length} produto(s)?\n\nEsta operação não pode ser desfeita.`);
+            if (!confirmacao) return;
+            
+            try {
+                let importados = 0;
+                let erros = 0;
+                
+                for (const p of produtosParaImportar) {
+                    try {
+                        const novoId = database.ref('produtos').push().key;
+                        const novoProduto = {
+                            id: novoId,
+                            nome: p.nome,
+                            categoria: p.categoria,
+                            volume: p.volume,
+                            preco: p.preco,
+                            estoqueMin: p.estoqueMin,
+                            qtd: 0,
+                            lotes: []
+                        };
+                        
+                        // Se tem quantidade inicial, adicionar lote
+                        if (p.qtdInicial > 0) {
+                            const dataAtual = new Date();
+                            const dataFormatada = `${String(dataAtual.getDate()).padStart(2, '0')}/${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()} ${String(dataAtual.getHours()).padStart(2, '0')}:${String(dataAtual.getMinutes()).padStart(2, '0')}:${String(dataAtual.getSeconds()).padStart(2, '0')}`;
+                            
+                            novoProduto.lotes.push({
+                                numero: 'IMP-' + Date.now(),
+                                data: dataFormatada,
+                                tipo: 'entrada',
+                                qtd: p.qtdInicial
+                            });
+                            novoProduto.qtd = p.qtdInicial;
+                        }
+                        
+                        await database.ref('produtos/' + novoId).set(novoProduto);
+                        importados++;
+                        
+                    } catch (error) {
+                        console.error('Erro ao importar produto:', p.nome, error);
+                        erros++;
+                    }
+                }
+                
+                alert(`✅ Importação concluída!\n\n${importados} produto(s) importado(s)\n${erros} erro(s)`);
+                
+                if (importados > 0) {
+                    carregarProdutos();
+                }
+                
+                fecharImportarProdutos();
+                
+            } catch (error) {
+                console.error(error);
+                alert('❌ Erro durante importação: ' + error.message);
+            }
+        }
+        
+        function cancelarImportacao() {
+            produtosParaImportar = [];
+            document.getElementById('previewImport').style.display = 'none';
+            document.getElementById('nomeArquivoImport').textContent = '';
+        }
+        
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             renderizarTabela();
         });
@@ -2015,6 +2213,47 @@
             <div id="listaUsuarios" style="max-height: 400px; overflow-y: auto;"></div>
             
             <button onclick="fecharModalUsuarios()" style="margin-top: 20px; padding: 12px 30px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal Importar Produtos -->
+    <div id="modalImportarProdutos" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="close" onclick="fecharImportarProdutos()">&times;</span>
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">📥 Importar Produtos em Lote</h2>
+            
+            <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 2px solid rgba(16, 185, 129, 0.3);">
+                <h3 style="color: #059669; margin-top: 0; font-size: 18px;">📋 Formato do Arquivo XLSX</h3>
+                <p style="margin: 10px 0; color: #475569;">O arquivo Excel deve conter as seguintes colunas:</p>
+                <ul style="color: #64748b; line-height: 1.8;">
+                    <li><strong>Produto</strong> - Nome do produto</li>
+                    <li><strong>Categoria</strong> - Desinfetantes, Amaciantes, Lava Roupas ou Lava Louças</li>
+                    <li><strong>Volume</strong> - 2L ou 5L</li>
+                    <li><strong>Preco</strong> - Preço unitário (ex: 10.50)</li>
+                    <li><strong>Estoque Minimo</strong> - Quantidade mínima (ex: 50)</li>
+                    <li><strong>Quantidade Inicial</strong> - Estoque inicial (opcional)</li>
+                </ul>
+                <p style="margin: 15px 0 0 0; color: #475569; font-size: 14px;">
+                    💡 <strong>Dica:</strong> Exporte a planilha atual para ver um exemplo do formato.
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <input type="file" id="fileImportInput" accept=".xlsx,.xls" style="display: none;" onchange="processarArquivoImportacao()">
+                <button onclick="document.getElementById('fileImportInput').click()" style="padding: 15px 40px; font-size: 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(16, 185, 129, 0.3)'">
+                    📂 Selecionar Arquivo XLSX
+                </button>
+                <p id="nomeArquivoImport" style="margin-top: 15px; color: #64748b; font-style: italic;"></p>
+            </div>
+            
+            <div id="previewImport" style="display: none; margin-top: 25px;">
+                <h3 style="color: #2c3e50; margin-bottom: 15px;">📊 Prévia dos Dados</h3>
+                <div id="previewTabela" style="max-height: 300px; overflow-y: auto; border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; background: #f8fafc;"></div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button onclick="confirmarImportacao()" style="padding: 12px 35px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px; margin-right: 10px;">✅ Confirmar Importação</button>
+                    <button onclick="cancelarImportacao()" style="padding: 12px 35px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 15px;">❌ Cancelar</button>
+                </div>
+            </div>
         </div>
     </div>
 
