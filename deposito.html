@@ -678,6 +678,11 @@
         
         // Verificar login ao carregar página
         window.addEventListener('load', () => {
+            // Adicionar listener para Enter no login
+            document.getElementById('loginSenha').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') fazerLogin();
+            });
+            
             const usuarioSalvo = localStorage.getItem('usuarioLogado');
             if (usuarioSalvo) {
                 usuarioLogado = JSON.parse(usuarioSalvo);
@@ -697,6 +702,7 @@
                         };
                         usuariosRef.child(masterPadrao.id.toString()).set(masterPadrao);
                         console.log('✅ Usuário master padrão criado: admin@seuvital.com / admin123');
+                        alert('✅ Sistema iniciado!\n\nLogin: admin@seuvital.com\nSenha: admin123');
                     }
                 });
             }
