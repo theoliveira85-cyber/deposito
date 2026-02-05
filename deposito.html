@@ -10,10 +10,13 @@
     <meta name="apple-mobile-web-app-title" content="Estoque">
     <meta name="msapplication-TileColor" content="#2c3e50">
     <meta name="msapplication-config" content="browserconfig.xml">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c3e50' width='192' height='192'/><text x='96' y='120' font-size='80' font-weight='bold' fill='%23ffffff' text-anchor='middle'>📦</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232c3e50' width='192' height='192' rx='45'/><text x='96' y='120' font-size='80' font-weight='bold' fill='%23ffffff' text-anchor='middle'>📦</text></svg>">
-    <title>Dashboard - Estoque Deposito</title>
+    <title>Dashboard - Estoque Deposito [v2.0]</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -514,7 +517,7 @@
             <div class="export-buttons">
                 <button class="btn-export" onclick="exportarExcel()">📊 Exportar (CSV)</button>
                 <button class="btn-export pdf" onclick="exportarPDF()">📄 Exportar para PDF</button>
-                <button class="btn-export" onclick="limparDados()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">🔄 Resetar Dados</button>
+                <button class="btn-export" onclick="converterDadosAntigos()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">⚙️ Converter Dados</button>
             </div>
             
             <div id="tabelaProdutosAgrupada"></div>
@@ -544,50 +547,50 @@
         
         // Dados iniciais (usados apenas se Firebase estiver vazio)
         const produtosIniciais = [
-            { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 15, preco: 5.50, lotes: [] },
-            { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 12.00, lotes: [] },
-            { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 12, preco: 4.80, lotes: [] },
-            { id: 4, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 10.50, lotes: [] },
-            { id: 5, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '2L', qtd: 18, preco: 4.20, lotes: [] },
-            { id: 6, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '5L', qtd: 9, preco: 9.80, lotes: [] },
-            { id: 7, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '2L', qtd: 10, preco: 6.00, lotes: [] },
-            { id: 8, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '5L', qtd: 5, preco: 13.50, lotes: [] },
-            { id: 9, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '2L', qtd: 14, preco: 5.20, lotes: [] },
-            { id: 10, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.50, lotes: [] },
-            { id: 11, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '2L', qtd: 16, preco: 4.90, lotes: [] },
-            { id: 12, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '5L', qtd: 8, preco: 10.80, lotes: [] },
-            { id: 13, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '2L', qtd: 11, preco: 5.40, lotes: [] },
-            { id: 14, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '5L', qtd: 6, preco: 12.00, lotes: [] },
-            { id: 15, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '2L', qtd: 13, preco: 5.10, lotes: [] },
-            { id: 16, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '5L', qtd: 7, preco: 11.20, lotes: [] },
-            { id: 17, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '2L', qtd: 19, preco: 4.70, lotes: [] },
-            { id: 18, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '5L', qtd: 10, preco: 10.50, lotes: [] },
+            { id: 1, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '2L', qtd: 1620, preco: 5.50, lotes: [] },
+            { id: 2, nome: 'Desinfetante Iguatemi', categoria: 'Desinfetantes', volume: '5L', qtd: 336, preco: 12.00, lotes: [] },
+            { id: 3, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '2L', qtd: 1296, preco: 4.80, lotes: [] },
+            { id: 4, nome: 'Desinfetante Stillo', categoria: 'Desinfetantes', volume: '5L', qtd: 252, preco: 10.50, lotes: [] },
+            { id: 5, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '2L', qtd: 1944, preco: 4.20, lotes: [] },
+            { id: 6, nome: 'Desinfetante Zix', categoria: 'Desinfetantes', volume: '5L', qtd: 378, preco: 9.80, lotes: [] },
+            { id: 7, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '2L', qtd: 1080, preco: 6.00, lotes: [] },
+            { id: 8, nome: 'Desinfetante Lavanda Bebê', categoria: 'Desinfetantes', volume: '5L', qtd: 210, preco: 13.50, lotes: [] },
+            { id: 9, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '2L', qtd: 1512, preco: 5.20, lotes: [] },
+            { id: 10, nome: 'Desinfetante Vinol', categoria: 'Desinfetantes', volume: '5L', qtd: 294, preco: 11.50, lotes: [] },
+            { id: 11, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '2L', qtd: 1728, preco: 4.90, lotes: [] },
+            { id: 12, nome: 'Desinfetante Natureza', categoria: 'Desinfetantes', volume: '5L', qtd: 336, preco: 10.80, lotes: [] },
+            { id: 13, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '2L', qtd: 1188, preco: 5.40, lotes: [] },
+            { id: 14, nome: 'Desinfetante Ervas Finas', categoria: 'Desinfetantes', volume: '5L', qtd: 252, preco: 12.00, lotes: [] },
+            { id: 15, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '2L', qtd: 1404, preco: 5.10, lotes: [] },
+            { id: 16, nome: 'Desinfetante Floral', categoria: 'Desinfetantes', volume: '5L', qtd: 294, preco: 11.20, lotes: [] },
+            { id: 17, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '2L', qtd: 2052, preco: 4.70, lotes: [] },
+            { id: 18, nome: 'Desinfetante Eucalipto', categoria: 'Desinfetantes', volume: '5L', qtd: 420, preco: 10.50, lotes: [] },
             
             // Amaciantes
-            { id: 19, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '2L', qtd: 20, preco: 6.80, lotes: [] },
-            { id: 20, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '5L', qtd: 12, preco: 15.00, lotes: [] },
-            { id: 21, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '2L', qtd: 18, preco: 6.50, lotes: [] },
-            { id: 22, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '5L', qtd: 10, preco: 14.50, lotes: [] },
-            { id: 23, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '2L', qtd: 22, preco: 6.20, lotes: [] },
-            { id: 24, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '5L', qtd: 14, preco: 13.80, lotes: [] },
+            { id: 19, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '2L', qtd: 2160, preco: 6.80, lotes: [] },
+            { id: 20, nome: 'Amaciante Pink', categoria: 'Amaciantes', volume: '5L', qtd: 504, preco: 15.00, lotes: [] },
+            { id: 21, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '2L', qtd: 1944, preco: 6.50, lotes: [] },
+            { id: 22, nome: 'Amaciante Blue', categoria: 'Amaciantes', volume: '5L', qtd: 420, preco: 14.50, lotes: [] },
+            { id: 23, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '2L', qtd: 2376, preco: 6.20, lotes: [] },
+            { id: 24, nome: 'Amaciante White', categoria: 'Amaciantes', volume: '5L', qtd: 588, preco: 13.80, lotes: [] },
             
             // Lava Roupas
-            { id: 25, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '2L', qtd: 25, preco: 7.50, lotes: [] },
-            { id: 26, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '5L', qtd: 15, preco: 16.50, lotes: [] },
-            { id: 27, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '2L', qtd: 21, preco: 7.20, lotes: [] },
-            { id: 28, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '5L', qtd: 13, preco: 16.00, lotes: [] },
-            { id: 29, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '2L', qtd: 23, preco: 7.80, lotes: [] },
-            { id: 30, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '5L', qtd: 14, preco: 17.00, lotes: [] },
+            { id: 25, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '2L', qtd: 2700, preco: 7.50, lotes: [] },
+            { id: 26, nome: 'Lava Roupas Clear', categoria: 'Lava Roupas', volume: '5L', qtd: 630, preco: 16.50, lotes: [] },
+            { id: 27, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '2L', qtd: 2268, preco: 7.20, lotes: [] },
+            { id: 28, nome: 'Lava Roupas Tropical', categoria: 'Lava Roupas', volume: '5L', qtd: 546, preco: 16.00, lotes: [] },
+            { id: 29, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '2L', qtd: 2484, preco: 7.80, lotes: [] },
+            { id: 30, nome: 'Lava Roupas Coco', categoria: 'Lava Roupas', volume: '5L', qtd: 588, preco: 17.00, lotes: [] },
             
             // Lava Louças
-            { id: 31, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '2L', qtd: 28, preco: 5.80, lotes: [] },
-            { id: 32, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 12.50, lotes: [] },
-            { id: 33, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '2L', qtd: 26, preco: 6.10, lotes: [] },
-            { id: 34, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '5L', qtd: 15, preco: 13.20, lotes: [] },
-            { id: 35, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '2L', qtd: 24, preco: 5.90, lotes: [] },
-            { id: 36, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '5L', qtd: 14, preco: 12.80, lotes: [] },
-            { id: 37, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '2L', qtd: 27, preco: 6.30, lotes: [] },
-            { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 16, preco: 13.50, lotes: [] }
+            { id: 31, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '2L', qtd: 3024, preco: 5.80, lotes: [] },
+            { id: 32, nome: 'Lava Louças Neutro', categoria: 'Lava Louças', volume: '5L', qtd: 672, preco: 12.50, lotes: [] },
+            { id: 33, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '2L', qtd: 2808, preco: 6.10, lotes: [] },
+            { id: 34, nome: 'Lava Louças Coco', categoria: 'Lava Louças', volume: '5L', qtd: 630, preco: 13.20, lotes: [] },
+            { id: 35, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '2L', qtd: 2592, preco: 5.90, lotes: [] },
+            { id: 36, nome: 'Lava Louças Limão', categoria: 'Lava Louças', volume: '5L', qtd: 588, preco: 12.80, lotes: [] },
+            { id: 37, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '2L', qtd: 2916, preco: 6.30, lotes: [] },
+            { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 672, preco: 13.50, lotes: [] }
         ];
         
         // ===== FUNÇÕES FIREBASE =====
@@ -598,10 +601,21 @@
                 const dados = snapshot.val();
                 if (dados && Array.isArray(dados) && dados.length > 0) {
                     produtos = dados;
+                    
+                    // 🔄 CONVERSÃO AUTOMÁTICA de andares para unidades reais
+                    const convertidos = converterParaUnidadesReais(produtos);
+                    
+                    if (convertidos > 0) {
+                        console.log(`✅ ${convertidos} produtos convertidos automaticamente!`);
+                        salvarDados(); // Salvar os dados convertidos
+                    }
+                    
                     console.log('✅ Produtos carregados do Firebase:', produtos.length);
                 } else {
                     // Se Firebase vazio, usar dados iniciais
                     produtos = produtosIniciais;
+                    // Marcar todos como versão 2
+                    produtos.forEach(p => p._v = 2);
                     salvarDados(); // Salvar dados iniciais no Firebase
                     console.log('📦 Dados iniciais carregados e salvos no Firebase');
                 }
@@ -610,15 +624,84 @@
             });
         }
         
+        // Função para converter produtos de andares para unidades reais
+        function converterParaUnidadesReais(listaProdutos) {
+            let convertidos = 0;
+            listaProdutos.forEach(p => {
+                // Se já tem marcador de versão 2, não converter
+                if (p._v === 2) return;
+                
+                const unidades = obterUnidades(p);
+                const qtdAtual = parseInt(p.qtd, 10) || 0;
+                const limiteDeteccao = p.volume === '5L' ? 50 : 100;
+                
+                // Se qtd é pequeno, provavelmente é andar (formato antigo)
+                if (qtdAtual < limiteDeteccao && qtdAtual > 0) {
+                    p.qtd = qtdAtual * unidades;
+                    p._v = 2; // Marca como versão 2 (unidades reais)
+                    console.log(`🔄 Convertido: ${p.nome} (${p.volume}) → ${p.qtd} unidades`);
+                    convertidos++;
+                } else if (qtdAtual >= limiteDeteccao) {
+                    // Já está em unidades, só marca
+                    p._v = 2;
+                }
+            });
+            return convertidos;
+        }
+        
         // Listener em tempo real - atualiza quando alguém modificar
+        let primeiraExecucao = true;
         produtosRef.on('value', (snapshot) => {
             const dados = snapshot.val();
             if (dados && Array.isArray(dados)) {
+                // Pular primeira execução (já tratada em carregarProdutos)
+                if (primeiraExecucao) {
+                    primeiraExecucao = false;
+                    return;
+                }
+                
                 produtos = dados;
                 renderizarTabela();
                 console.log('🔄 Dados atualizados em tempo real!');
             }
         });
+        
+        // Converter dados antigos de andares para unidades reais
+        function converterDadosAntigos() {
+            if (confirm('⚠️ ATENÇÃO: Esta função vai converter os dados do Firebase de andares para unidades reais.\n\nVocê PRECISA fazer isso UMA VEZ para corrigir os cálculos!\n\nExemplo: se mostra 324 unidades (3 andares), continuará mostrando 324.\n\nConfirma conversão?')) {
+                let convertidos = 0;
+                let jaConvertido = false;
+                
+                produtos.forEach(p => {
+                    const unidades = obterUnidades(p);
+                    const qtdAtual = parseInt(p.qtd, 10) || 0;
+                    
+                    // Detecta se é andar (valores pequenos) ou unidades reais (valores grandes)
+                    // Para 2L: andares são < 50, unidades reais são > 100
+                    // Para 5L: andares são < 30, unidades reais são > 50
+                    const limiteDeteccao = p.volume === '5L' ? 50 : 100;
+                    
+                    if (qtdAtual < limiteDeteccao) {
+                        const qtdAntiga = qtdAtual;
+                        p.qtd = qtdAtual * unidades;
+                        console.log(`🔄 ${p.nome} (${p.volume}): ${qtdAntiga} andares → ${p.qtd} unidades`);
+                        convertidos++;
+                    } else {
+                        jaConvertido = true;
+                    }
+                });
+                
+                salvarDados();
+                
+                if (convertidos > 0) {
+                    alert(`✅ Conversão concluída!\n\n${convertidos} produtos convertidos para unidades reais.\n\nAgora os cálculos funcionarão corretamente!`);
+                } else if (jaConvertido) {
+                    alert(`⚠️ Os dados já parecem estar convertidos!\n\nSe ainda houver problemas, clique em "Resetar Dados" para recomeçar.`);
+                } else {
+                    alert('Nenhum produto precisou ser convertido.');
+                }
+            }
+        }
         
         function obterUnidades(produto) {
             return produto.volume === '5L' ? 42 : 108;
@@ -702,17 +785,18 @@
                         <tbody>`;
                     
                     produtos_volume.forEach(p => {
+                        const qtdUnidades = parseInt(p.qtd, 10) || 0;
                         const unidades = obterUnidades(p);
-                        const totalUnidades = p.qtd * unidades;
-                        const total = (p.qtd * p.preco).toFixed(2);
-                        const lowStock = totalUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const andares = Math.ceil(qtdUnidades / unidades);
+                        const total = (andares * p.preco).toFixed(2);
+                        const lowStock = qtdUnidades <= (p.volume === '5L' ? 42 : 108);
                         const lowStockStyle = lowStock ? 'background: #fadbd8;' : '';
                         
                         // Renderizar linha da tabela (desktop)
                         htmlCategoria += `
                             <tr style="${lowStockStyle}">
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${p.nome}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${totalUnidades} un</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${qtdUnidades} un</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${p.preco.toFixed(2)}</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${total}</td>
                                 <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
@@ -728,10 +812,11 @@
                     
                     // Renderizar cards (mobile)
                     produtos_volume.forEach(p => {
+                        const qtdUnidades = parseInt(p.qtd, 10) || 0;
                         const unidades = obterUnidades(p);
-                        const totalUnidades = p.qtd * unidades;
-                        const total = (p.qtd * p.preco).toFixed(2);
-                        const lowStock = totalUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const andares = Math.ceil(qtdUnidades / unidades);
+                        const total = (andares * p.preco).toFixed(2);
+                        const lowStock = qtdUnidades <= (p.volume === '5L' ? 42 : 108);
                         const alertIcon = lowStock ? ' ⚠️' : '';
                         
                         htmlCategoria += `
@@ -743,7 +828,7 @@
                                 </div>
                                 <div class="mobile-card-row">
                                     <span class="mobile-card-label">Quantidade:</span>
-                                    <span class="mobile-card-value">${totalUnidades} un</span>
+                                    <span class="mobile-card-value">${qtdUnidades} un</span>
                                 </div>
                                 <div class="mobile-card-row">
                                     <span class="mobile-card-label">Preço Unit.:</span>
@@ -823,38 +908,72 @@
         function entradaMercadoria(id) {
             const p = produtos.find(x => x.id === id);
             if (!p) return;
+            
+            console.log('=== ENTRADA DEBUG ===');
+            console.log('Produto:', p.nome, p.volume);
+            console.log('Qtd ANTES (tipo):', typeof p.qtd, 'valor:', p.qtd);
+            
             const lote = prompt('Número do lote:');
             if (!lote) return;
-            const qtd = parseInt(prompt('Quantidade de unidades:')) || 0;
-            if (qtd > 0) {
-                const unidades = obterUnidades(p);
-                const qtdAnterior = p.qtd;
-                p.qtd += Math.ceil(qtd / unidades);
-                console.log(`ENTRADA: ${p.nome} (${p.volume}) - Unidades: ${qtd}, Caixas/Andares adicionados: ${Math.ceil(qtd / unidades)}, Qtd antes: ${qtdAnterior}, Qtd depois: ${p.qtd}`);
-                if (!p.lotes) p.lotes = [];
-                p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
-                salvarDados();
-                renderizarTabela();
+            const qtdInput = prompt('Quantidade de unidades:');
+            const qtd = parseInt(qtdInput, 10);
+            if (isNaN(qtd) || qtd <= 0) {
+                alert('Quantidade inválida!');
+                return;
             }
+            
+            console.log('Unidades a adicionar:', qtd);
+            
+            const qtdAnterior = parseInt(p.qtd, 10) || 0;
+            p.qtd = qtdAnterior + qtd;
+            p._v = 2; // Marca como versão 2
+            
+            console.log('Cálculo: ', qtdAnterior, '+', qtd, '=', p.qtd);
+            console.log('Qtd DEPOIS (tipo):', typeof p.qtd, 'valor:', p.qtd);
+            console.log('===================');
+            
+            if (!p.lotes) p.lotes = [];
+            p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
+            salvarDados();
+            renderizarTabela();
         }
         
         function saidaMercadoria(id) {
             const p = produtos.find(x => x.id === id);
             if (!p) return;
-            const qtd = parseInt(prompt('Quantidade de unidades a retirar:')) || 0;
-            const unidades = obterUnidades(p);
-            const totalDisponivel = p.qtd * unidades;
             
-            if (qtd > 0 && qtd <= totalDisponivel) {
-                const qtdAnterior = p.qtd;
-                p.qtd -= Math.ceil(qtd / unidades);
-                console.log(`SAÍDA: ${p.nome} (${p.volume}) - Unidades retiradas: ${qtd}, Caixas/Andares removidos: ${Math.ceil(qtd / unidades)}, Qtd antes: ${qtdAnterior}, Qtd depois: ${p.qtd}`);
+            console.log('=== SAÍDA DEBUG ===');
+            console.log('Produto:', p.nome, p.volume);
+            console.log('Qtd ANTES (tipo):', typeof p.qtd, 'valor:', p.qtd);
+            
+            const qtdInput = prompt('Quantidade de unidades a retirar:');
+            const qtd = parseInt(qtdInput, 10);
+            if (isNaN(qtd) || qtd <= 0) {
+                alert('Quantidade inválida!');
+                return;
+            }
+            
+            console.log('Unidades a retirar:', qtd);
+            
+            const qtdAtual = parseInt(p.qtd, 10) || 0;
+            
+            console.log('Qtd disponível:', qtdAtual);
+            
+            if (qtd <= qtdAtual) {
+                const qtdAnterior = qtdAtual;
+                p.qtd = Math.max(0, qtdAnterior - qtd);
+                p._v = 2; // Marca como versão 2
+                
+                console.log('Cálculo: ', qtdAnterior, '-', qtd, '=', p.qtd);
+                console.log('Qtd DEPOIS (tipo):', typeof p.qtd, 'valor:', p.qtd);
+                console.log('===================');
+                
                 if (!p.lotes) p.lotes = [];
                 p.lotes.push({ numero: 'N/A', data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
                 salvarDados();
                 renderizarTabela();
             } else {
-                alert(`Quantidade inválida! Disponível: ${totalDisponivel} un`);
+                alert(`Quantidade inválida! Disponível: ${qtdAtual} un`);
             }
         }
         
@@ -881,15 +1000,20 @@
         }
         
         function exportarExcel() {
-            const dados = produtos.map(p => ({
-                'Produto': p.nome,
-                'Volume': p.volume,
-                'Categoria': p.categoria,
-                'Quantidade': p.qtd,
-                'Unidades Reais': p.qtd * obterUnidades(p),
-                'Preço Unit.': p.preco.toFixed(2),
-                'Total': (p.qtd * p.preco).toFixed(2)
-            }));
+            const dados = produtos.map(p => {
+                const qtdUnidades = parseInt(p.qtd, 10) || 0;
+                const unidades = obterUnidades(p);
+                const andares = Math.ceil(qtdUnidades / unidades);
+                return {
+                    'Produto': p.nome,
+                    'Volume': p.volume,
+                    'Categoria': p.categoria,
+                    'Quantidade': qtdUnidades,
+                    'Andares': andares,
+                    'Preço Unit.': p.preco.toFixed(2),
+                    'Total': (andares * p.preco).toFixed(2)
+                };
+            });
             
             // Gerar CSV (compatível com Excel)
             let csv = 'Produto,Volume,Categoria,Quantidade,Unidades Reais,Preço Unit.,Total\n';
