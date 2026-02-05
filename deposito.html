@@ -1006,10 +1006,14 @@
             let historico = `📋 Histórico: ${p.nome} (${p.volume})\n${'='.repeat(50)}\n\n`;
             p.lotes.forEach((l, index) => {
                 const icone = l.tipo === 'entrada' ? '📥' : '📤';
+                const qtd = l.qtd || 0;
+                const lote = l.numero || 'N/A';
+                const data = l.data || 'Data não registrada';
+                
                 historico += `${index + 1}. ${icone} ${l.tipo.toUpperCase()}\n`;
-                historico += `   Data/Hora: ${l.data}\n`;
-                historico += `   Quantidade: ${l.qtd} un\n`;
-                historico += `   Lote: ${l.numero}\n\n`;
+                historico += `   Data/Hora: ${data}\n`;
+                historico += `   Quantidade: ${qtd} un\n`;
+                historico += `   Lote: ${lote}\n\n`;
             });
             alert(historico);
         }
