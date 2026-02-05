@@ -941,7 +941,9 @@
             console.log('===================');
             
             if (!p.lotes) p.lotes = [];
-            p.lotes.push({ numero: lote, data: new Date().toLocaleDateString(), tipo: 'entrada', qtd });
+            const agora = new Date();
+            const dataHora = agora.toLocaleDateString() + ' ' + agora.toLocaleTimeString();
+            p.lotes.push({ numero: lote, data: dataHora, tipo: 'entrada', qtd });
             salvarDados();
             renderizarTabela();
         }
@@ -977,7 +979,16 @@
                 console.log('===================');
                 
                 if (!p.lotes) p.lotes = [];
-                p.lotes.push({ numero: 'N/A', data: new Date().toLocaleDateString(), tipo: 'saida', qtd });
+                
+                // Buscar o lote da última entrada
+                const entradasAnteriores = p.lotes.filter(l => l.tipo === 'entrada');
+                const loteUltimaEntrada = entradasAnteriores.length > 0 
+                    ? entradasAnteriores[entradasAnteriores.length - 1].numero 
+                    : 'N/A';
+                
+                const agora = new Date();
+                const dataHora = agora.toLocaleDateString() + ' ' + agora.toLocaleTimeString();
+                p.lotes.push({ numero: loteUltimaEntrada, data: dataHora, tipo: 'saida', qtd });
                 salvarDados();
                 renderizarTabela();
             } else {
@@ -992,9 +1003,13 @@
                 return;
             }
             
-            let historico = `Histórico: ${p.nome} (${p.volume})\n\n`;
-            p.lotes.forEach(l => {
-                historico += `${l.data} - ${l.tipo.toUpperCase()}: ${l.qtd} un (Lote: ${l.numero})\n`;
+            let historico = `📋 Histórico: ${p.nome} (${p.volume})\n${'='.repeat(50)}\n\n`;
+            p.lotes.forEach((l, index) => {
+                const icone = l.tipo === 'entrada' ? '📥' : '📤';
+                historico += `${index + 1}. ${icone} ${l.tipo.toUpperCase()}\n`;
+                historico += `   Data/Hora: ${l.data}\n`;
+                historico += `   Quantidade: ${l.qtd} un\n`;
+                historico += `   Lote: ${l.numero}\n\n`;
             });
             alert(historico);
         }
