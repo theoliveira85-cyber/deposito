@@ -601,16 +601,21 @@
                 const dados = snapshot.val();
                 if (dados && Array.isArray(dados) && dados.length > 0) {
                     produtos = dados;
-                    
-                    // 🔄 CONVERSÃO AUTOMÁTICA de andares para unidades reais
-                    const convertidos = converterParaUnidadesReais(produtos);
-                    
-                    if (convertidos > 0) {
-                        console.log(`✅ ${convertidos} produtos convertidos automaticamente!`);
-                        salvarDados(); // Salvar os dados convertidos
-                    }
-                    
                     console.log('✅ Produtos carregados do Firebase:', produtos.length);
+                    
+                    // Garantir que todos tenham o marcador _v (sem converter novamente)
+                    let precisaSalvar = false;
+                    produtos.forEach(p => {
+                        if (!p._v) {
+                            p._v = 2; // Marcar como versão 2 sem converter
+                            precisaSalvar = true;
+                        }
+                    });
+                    
+                    if (precisaSalvar) {
+                        console.log('📌 Marcando produtos como v2...');
+                        salvarDados();
+                    }
                 } else {
                     // Se Firebase vazio, usar dados iniciais
                     produtos = produtosIniciais;
@@ -708,9 +713,12 @@
         }
         
         function salvarDados() {
+            console.log('💾 Salvando no Firebase...', produtos.length, 'produtos');
+            console.log('📊 Exemplo produto 19 (Amaciante Pink 2L):', produtos.find(p => p.id === 19));
+            
             produtosRef.set(produtos)
                 .then(() => {
-                    console.log('✅ Dados salvos no Firebase (sincronizado em tempo real)');
+                    console.log('✅ Dados salvos no Firebase com sucesso!');
                 })
                 .catch((error) => {
                     console.error('❌ Erro ao salvar no Firebase:', error);
