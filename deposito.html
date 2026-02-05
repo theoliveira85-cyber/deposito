@@ -727,13 +727,23 @@
         }
         
         function atualizarEstatisticas() {
-            const totalUnidades = produtos.reduce((sum, p) => sum + (p.qtd * obterUnidades(p)), 0);
-            const valorTotal = produtos.reduce((sum, p) => sum + (p.qtd * p.preco), 0);
+            // p.qtd já são UNIDADES REAIS (não andares)
+            const totalUnidades = produtos.reduce((sum, p) => {
+                const qtd = parseInt(p.qtd, 10) || 0;
+                return sum + qtd;
+            }, 0);
+            
+            const valorTotal = produtos.reduce((sum, p) => {
+                const qtd = parseInt(p.qtd, 10) || 0;
+                const unidades = obterUnidades(p);
+                const andares = Math.ceil(qtd / unidades);
+                return sum + (andares * p.preco);
+            }, 0);
+            
             const estoqueCritico = produtos.filter(p => {
-                const unidadesTotal = p.qtd * obterUnidades(p);
-                // Para 2L: alerta com 108 unidades (1 andar). Para 5L: alerta com 42 unidades (1 andar)
+                const qtd = parseInt(p.qtd, 10) || 0;
                 const limite = p.volume === '5L' ? 42 : 108;
-                return unidadesTotal <= limite;
+                return qtd <= limite;
             }).length;
             
             document.getElementById('totalProdutos').textContent = totalUnidades;
@@ -943,7 +953,10 @@
             if (!p.lotes) p.lotes = [];
             const agora = new Date();
             const dataHora = agora.toLocaleDateString() + ' ' + agora.toLocaleTimeString();
-            p.lotes.push({ numero: lote, data: dataHora, tipo: 'entrada', qtd });
+            const novoMovimento = { numero: lote, data: dataHora, tipo: 'entrada', qtd: qtd };
+            p.lotes.push(novoMovimento);
+            console.log('📋 Movimento ENTRADA adicionado ao histórico:', novoMovimento);
+            console.log('📊 Total de movimentos agora:', p.lotes.length);
             salvarDados();
             renderizarTabela();
         }
@@ -988,7 +1001,10 @@
                 
                 const agora = new Date();
                 const dataHora = agora.toLocaleDateString() + ' ' + agora.toLocaleTimeString();
-                p.lotes.push({ numero: loteUltimaEntrada, data: dataHora, tipo: 'saida', qtd });
+                const novoMovimento = { numero: loteUltimaEntrada, data: dataHora, tipo: 'saida', qtd: qtd };
+                p.lotes.push(novoMovimento);
+                console.log('📋 Movimento SAÍDA adicionado ao histórico:', novoMovimento);
+                console.log('📊 Total de movimentos agora:', p.lotes.length);
                 salvarDados();
                 renderizarTabela();
             } else {
