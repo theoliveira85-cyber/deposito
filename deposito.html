@@ -1020,7 +1020,11 @@
             }
             
             let historico = `📋 Histórico: ${p.nome} (${p.volume})\n${'='.repeat(50)}\n\n`;
-            p.lotes.forEach((l, index) => {
+            
+            // Inverter array para mostrar mais recente primeiro
+            const lotesInvertidos = [...p.lotes].reverse();
+            
+            lotesInvertidos.forEach((l, index) => {
                 const icone = l.tipo === 'entrada' ? '📥' : '📤';
                 const qtd = l.qtd || 0;
                 const lote = l.numero || 'N/A';
