@@ -1265,15 +1265,28 @@
                     document.body.appendChild(hint);
                 }
             } else {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registrado:', registration);
-                    })
-                    .catch(error => {
-                        console.log('Erro ao registrar Service Worker:', error);
-                        // mostrar mensagem curta ao usuário
-                        console.error('Service Worker registration failed:', error);
+                // FORÇAR ATUALIZAÇÃO: desregistrar service workers antigos
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                        console.log('🔄 Service Worker antigo removido');
+                    }
+                });
+                
+                // Limpar todos os caches antigos
+                if ('caches' in window) {
+                    caches.keys().then(function(cacheNames) {
+                        return Promise.all(
+                            cacheNames.map(function(cacheName) {
+                                console.log('🗑️ Removendo cache antigo:', cacheName);
+                                return caches.delete(cacheName);
+                            })
+                        );
                     });
+                }
+                
+                console.log('✅ Service Worker DESABILITADO para forçar atualização');
+                console.log('🔄 Recarregue a página após ver esta mensagem');
             }
         }
         
