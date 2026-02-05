@@ -24,6 +24,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     
     <style>
         * {
@@ -462,9 +463,27 @@
     </style>
 </head>
 <body>
+    <!-- Tela de Login -->
+    <div id="loginScreen" style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 400px; width: 90%;">
+            <h2 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">🔐 Login - Estoque Seu Vital</h2>
+            <input type="email" id="loginEmail" placeholder="Email" style="width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;">
+            <input type="password" id="loginSenha" placeholder="Senha" style="width: 100%; padding: 15px; margin-bottom: 20px; border: 2px solid #ecf0f1; border-radius: 10px; font-size: 16px;">
+            <button onclick="fazerLogin()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer;">Entrar</button>
+            <div id="loginErro" style="color: #e74c3c; text-align: center; margin-top: 15px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- App Principal (inicialmente oculto) -->
+    <div id="appPrincipal" style="display: none;">
     <div class="container">
         <header>
             <h1>📦 Galpao Seu Vital - Controle de Estoque</h1>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span id="usuarioLogado" style="color: white; font-size: 14px;"></span>
+                <button onclick="mostrarGerenciarUsuarios()" id="btnUsuarios" style="display: none; padding: 10px 20px; background: #f39c12; color: white; border: none; border-radius: 8px; cursor: pointer;">👥 Usuários</button>
+                <button onclick="fazerLogout()" style="padding: 10px 20px; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer;">Sair</button>
+            </div>
         </header>
         
         <div class="stats">
@@ -541,9 +560,11 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const produtosRef = database.ref('produtos');
+        const usuariosRef = database.ref('usuarios');
         
-        // Variável global de produtos
+        // Variável global de produtos e usuário logado
         let produtos = [];
+        let usuarioLogado = null;
         
         // Dados iniciais (usados apenas se Firebase estiver vazio)
         const produtosIniciais = [
@@ -593,7 +614,200 @@
             { id: 38, nome: 'Lava Louças Maçã', categoria: 'Lava Louças', volume: '5L', qtd: 672, preco: 13.50, lotes: [] }
         ];
         
+        // ===== FUNÇÕES DE AUTENTICAÇÃO =====
+        
+        // Fazer login
+        function fazerLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const senha = document.getElementById('loginSenha').value;
+            
+            if (!email || !senha) {
+                mostrarErroLogin('Preencha email e senha!');
+                return;
+            }
+            
+            usuariosRef.once('value', (snapshot) => {
+                const usuarios = snapshot.val() || {};
+                const usuarioEncontrado = Object.values(usuarios).find(u => u.email === email && u.senha === senha);
+                
+                if (usuarioEncontrado) {
+                    usuarioLogado = usuarioEncontrado;
+                    localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
+                    mostrarApp();
+                } else {
+                    mostrarErroLogin('Email ou senha incorretos!');
+                }
+            });
+        }
+        
+        // Fazer logout
+        function fazerLogout() {
+            if (confirm('Deseja sair do sistema?')) {
+                usuarioLogado = null;
+                localStorage.removeItem('usuarioLogado');
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appPrincipal').style.display = 'none';
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginSenha').value = '';
+            }
+        }
+        
+        // Mostrar app após login
+        function mostrarApp() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appPrincipal').style.display = 'block';
+            document.getElementById('usuarioLogado').textContent = `👤 ${usuarioLogado.nome} (${usuarioLogado.nivel})`;
+            
+            // Mostrar botão de usuários apenas para master
+            if (usuarioLogado.nivel === 'master') {
+                document.getElementById('btnUsuarios').style.display = 'inline-block';
+            }
+            
+            carregarProdutos();
+        }
+        
+        // Mostrar erro de login
+        function mostrarErroLogin(mensagem) {
+            const erroDiv = document.getElementById('loginErro');
+            erroDiv.textContent = mensagem;
+            erroDiv.style.display = 'block';
+            setTimeout(() => {
+                erroDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Verificar login ao carregar página
+        window.addEventListener('load', () => {
+            const usuarioSalvo = localStorage.getItem('usuarioLogado');
+            if (usuarioSalvo) {
+                usuarioLogado = JSON.parse(usuarioSalvo);
+                mostrarApp();
+            } else {
+                // Criar usuário master padrão se não existir nenhum
+                usuariosRef.once('value', (snapshot) => {
+                    const usuarios = snapshot.val();
+                    if (!usuarios || Object.keys(usuarios).length === 0) {
+                        // Criar primeiro usuário master
+                        const masterPadrao = {
+                            id: Date.now(),
+                            nome: 'Administrador',
+                            email: 'admin@seuvital.com',
+                            senha: 'admin123',
+                            nivel: 'master'
+                        };
+                        usuariosRef.child(masterPadrao.id.toString()).set(masterPadrao);
+                        console.log('✅ Usuário master padrão criado: admin@seuvital.com / admin123');
+                    }
+                });
+            }
+        });
+        
+        // Mostrar modal de gerenciamento de usuários
+        function mostrarGerenciarUsuarios() {
+            if (usuarioLogado.nivel !== 'master') {
+                alert('Apenas usuários Master podem gerenciar usuários!');
+                return;
+            }
+            document.getElementById('modalUsuarios').style.display = 'block';
+            carregarListaUsuarios();
+        }
+        
+        // Fechar modal
+        function fecharModalUsuarios() {
+            document.getElementById('modalUsuarios').style.display = 'none';
+        }
+        
+        // Carregar lista de usuários
+        function carregarListaUsuarios() {
+            usuariosRef.once('value', (snapshot) => {
+                const usuarios = snapshot.val() || {};
+                const lista = document.getElementById('listaUsuarios');
+                lista.innerHTML = '';
+                
+                Object.values(usuarios).forEach(u => {
+                    const nivelBadge = u.nivel === 'master' 
+                        ? '<span style="background:#f39c12; color:white; padding:4px 8px; border-radius:5px; font-size:12px;">MASTER</span>'
+                        : '<span style="background:#3498db; color:white; padding:4px 8px; border-radius:5px; font-size:12px;">BÁSICO</span>';
+                    
+                    lista.innerHTML += `
+                        <div style="background: #f8f9fa; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${u.nome}</strong><br>
+                                <span style="color: #7f8c8d; font-size: 14px;">${u.email}</span>
+                                ${nivelBadge}
+                            </div>
+                            <button onclick="removerUsuario('${u.id}')" style="padding: 8px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ Remover</button>
+                        </div>
+                    `;
+                });
+            });
+        }
+        
+        // Adicionar novo usuário
+        function adicionarUsuario() {
+            const nome = document.getElementById('novoNome').value.trim();
+            const email = document.getElementById('novoEmail').value.trim();
+            const senha = document.getElementById('novoSenha').value;
+            const nivel = document.getElementById('novoNivel').value;
+            
+            if (!nome || !email || !senha) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+            
+            // Verificar se email já existe
+            usuariosRef.once('value', (snapshot) => {
+                const usuarios = snapshot.val() || {};
+                const emailExiste = Object.values(usuarios).some(u => u.email === email);
+                
+                if (emailExiste) {
+                    alert('Este email já está cadastrado!');
+                    return;
+                }
+                
+                const novoUsuario = {
+                    id: Date.now(),
+                    nome,
+                    email,
+                    senha,
+                    nivel
+                };
+                
+                usuariosRef.child(novoUsuario.id.toString()).set(novoUsuario)
+                    .then(() => {
+                        alert(`✅ Usuário ${nome} cadastrado com sucesso!`);
+                        document.getElementById('novoNome').value = '';
+                        document.getElementById('novoEmail').value = '';
+                        document.getElementById('novoSenha').value = '';
+                        carregarListaUsuarios();
+                    })
+                    .catch(error => {
+                        alert('Erro ao cadastrar usuário: ' + error.message);
+                    });
+            });
+        }
+        
+        // Remover usuário
+        function removerUsuario(id) {
+            if (id == usuarioLogado.id) {
+                alert('Você não pode remover seu próprio usuário!');
+                return;
+            }
+            
+            if (confirm('Tem certeza que deseja remover este usuário?')) {
+                usuariosRef.child(id.toString()).remove()
+                    .then(() => {
+                        alert('✅ Usuário removido com sucesso!');
+                        carregarListaUsuarios();
+                    })
+                    .catch(error => {
+                        alert('Erro ao remover usuário: ' + error.message);
+                    });
+            }
+        }
+        
         // ===== FUNÇÕES FIREBASE =====
+
         
         // Carregar produtos do Firebase
         function carregarProdutos() {
@@ -673,6 +887,11 @@
         
         // Converter dados antigos de andares para unidades reais
         function converterDadosAntigos() {
+            if (!usuarioLogado || usuarioLogado.nivel !== 'master') {
+                alert('⛔ Apenas usuários Master podem converter dados!');
+                return;
+            }
+            
             if (confirm('⚠️ ATENÇÃO: Esta função vai converter os dados do Firebase de andares para unidades reais.\n\nVocê PRECISA fazer isso UMA VEZ para corrigir os cálculos!\n\nExemplo: se mostra 324 unidades (3 andares), continuará mostrando 324.\n\nConfirma conversão?')) {
                 let convertidos = 0;
                 let jaConvertido = false;
@@ -1350,6 +1569,33 @@
             console.log('Aplicativo instalado com sucesso!');
             alert('App instalado com sucesso! Você pode agora usar offline.');
         });
+    </div>
+    </div>
+
+    <!-- Modal de Gerenciamento de Usuários -->
+    <div id="modalUsuarios" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; overflow-y: auto;">
+        <div style="background: white; margin: 50px auto; padding: 30px; border-radius: 20px; max-width: 800px; width: 90%;">
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">👥 Gerenciamento de Usuários</h2>
+            
+            <div style="background: #ecf0f1; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;">Adicionar Novo Usuário</h3>
+                <input type="text" id="novoNome" placeholder="Nome completo" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                <input type="email" id="novoEmail" placeholder="Email" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                <input type="password" id="novoSenha" placeholder="Senha" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                <select id="novoNivel" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 2px solid #bdc3c7; border-radius: 8px;">
+                    <option value="basico">Usuário Básico</option>
+                    <option value="master">Usuário Master</option>
+                </select>
+                <button onclick="adicionarUsuario()" style="padding: 12px 30px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">➕ Adicionar Usuário</button>
+            </div>
+
+            <h3 style="margin-bottom: 15px;">Usuários Cadastrados</h3>
+            <div id="listaUsuarios" style="max-height: 400px; overflow-y: auto;"></div>
+            
+            <button onclick="fecharModalUsuarios()" style="margin-top: 20px; padding: 12px 30px; background: #95a5a6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Fechar</button>
+        </div>
+    </div>
+
     </script>
 </body>
 </html>
