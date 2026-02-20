@@ -539,6 +539,22 @@
             .dashboard-section {
                 padding: 20px;
             }
+
+            header,
+            .dashboard-section,
+            .table-container,
+            .stat-card {
+                box-shadow: none;
+                backdrop-filter: none;
+            }
+
+            .period-tab,
+            .category-tab,
+            button {
+                transition: none;
+                animation: none;
+                transform: none;
+            }
             
             .table-container {
                 padding: 20px;
@@ -946,6 +962,10 @@
         
         // ===== FUNÇÕES FIREBASE =====
 
+        function isMobileView() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
         const CHAVE_CONFIG_ESSENCIAS = 'estoque_config_essencias_1l';
         const CONFIG_ESSENCIAS = {
             habilitarVolume1L: false
@@ -1235,6 +1255,7 @@
             const filterCategoria = document.getElementById('filterCategoria').value;
             const filterVolume = document.getElementById('filterVolume').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const renderMobile = isMobileView();
             
             // Filtrar produtos
             let produtosFiltrados = produtos.filter(p => {
@@ -1269,80 +1290,82 @@
                     const produtos_volume = gruposPorCategoria[categoria][volume];
                     htmlCategoria += `<div class="volume-subgroup"><div class="volume-label">Volume: ${volume}</div>`;
                     
-                    htmlCategoria += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
-                        <thead>
-                            <tr style="background: #ecf0f1;">
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Produto</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Quantidade</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Preço Unit.</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Total</th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-                    
-                    produtos_volume.forEach(p => {
-                        const qtdUnidades = parseInt(p.qtd, 10) || 0;
-                        const unidades = obterUnidades(p);
-                        const andares = Math.ceil(qtdUnidades / unidades);
-                        const total = (andares * p.preco).toFixed(2);
-                        const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
-                        const lowStockStyle = lowStock ? 'background: #fadbd8;' : '';
+                    if (!renderMobile) {
+                        htmlCategoria += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                            <thead>
+                                <tr style="background: #ecf0f1;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Produto</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Quantidade</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Preço Unit.</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Total</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #bdc3c7;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                         
-                        // Renderizar linha da tabela (desktop)
-                        htmlCategoria += `
-                            <tr style="${lowStockStyle}">
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${p.nome}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${qtdUnidades} un</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${p.preco.toFixed(2)}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${total}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
-                                    <button class="btn-small" onclick="entradaMercadoria(${p.id})" style="background:#27ae60">Entrada</button>
-                                    <button class="btn-small" onclick="saidaMercadoria(${p.id})" style="background:#e74c3c">Saída</button>
-                                    <button class="btn-small" onclick="visualizarHistorico(${p.id})" style="background:#9b59b6">Histórico</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    
-                    htmlCategoria += `</tbody></table>`;
-                    
-                    // Renderizar cards (mobile)
-                    produtos_volume.forEach(p => {
-                        const qtdUnidades = parseInt(p.qtd, 10) || 0;
-                        const unidades = obterUnidades(p);
-                        const andares = Math.ceil(qtdUnidades / unidades);
-                        const total = (andares * p.preco).toFixed(2);
-                        const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
-                        const alertIcon = lowStock ? ' ⚠️' : '';
+                        produtos_volume.forEach(p => {
+                            const qtdUnidades = parseInt(p.qtd, 10) || 0;
+                            const unidades = obterUnidades(p);
+                            const andares = Math.ceil(qtdUnidades / unidades);
+                            const total = (andares * p.preco).toFixed(2);
+                            const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
+                            const lowStockStyle = lowStock ? 'background: #fadbd8;' : '';
+                            
+                            htmlCategoria += `
+                                <tr style="${lowStockStyle}">
+                                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${p.nome}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">${qtdUnidades} un</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${p.preco.toFixed(2)}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">R$ ${total}</td>
+                                    <td style="padding: 12px; border-bottom: 1px solid #ecf0f1;">
+                                        <button class="btn-small" onclick="entradaMercadoria(${p.id})" style="background:#27ae60">Entrada</button>
+                                        <button class="btn-small" onclick="saidaMercadoria(${p.id})" style="background:#e74c3c">Saída</button>
+                                        <button class="btn-small" onclick="visualizarHistorico(${p.id})" style="background:#9b59b6">Histórico</button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
                         
-                        htmlCategoria += `
-                            <div class="mobile-card" style="${lowStock ? 'border-left: 4px solid #e74c3c;' : ''}">
-                                <div class="mobile-card-header">${p.nome}${alertIcon}</div>
-                                <div class="mobile-card-row">
-                                    <span class="mobile-card-label">Volume:</span>
-                                    <span class="mobile-card-value">${p.volume}</span>
+                        htmlCategoria += `</tbody></table>`;
+                    }
+                    
+                    if (renderMobile) {
+                        produtos_volume.forEach(p => {
+                            const qtdUnidades = parseInt(p.qtd, 10) || 0;
+                            const unidades = obterUnidades(p);
+                            const andares = Math.ceil(qtdUnidades / unidades);
+                            const total = (andares * p.preco).toFixed(2);
+                            const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
+                            const alertIcon = lowStock ? ' ⚠️' : '';
+                            
+                            htmlCategoria += `
+                                <div class="mobile-card" style="${lowStock ? 'border-left: 4px solid #e74c3c;' : ''}">
+                                    <div class="mobile-card-header">${p.nome}${alertIcon}</div>
+                                    <div class="mobile-card-row">
+                                        <span class="mobile-card-label">Volume:</span>
+                                        <span class="mobile-card-value">${p.volume}</span>
+                                    </div>
+                                    <div class="mobile-card-row">
+                                        <span class="mobile-card-label">Quantidade:</span>
+                                        <span class="mobile-card-value">${qtdUnidades} un</span>
+                                    </div>
+                                    <div class="mobile-card-row">
+                                        <span class="mobile-card-label">Preço Unit.:</span>
+                                        <span class="mobile-card-value">R$ ${p.preco.toFixed(2)}</span>
+                                    </div>
+                                    <div class="mobile-card-row">
+                                        <span class="mobile-card-label">Total:</span>
+                                        <span class="mobile-card-value">R$ ${total}</span>
+                                    </div>
+                                    <div class="mobile-card-actions">
+                                        <button onclick="entradaMercadoria(${p.id})" style="background:#27ae60; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">+ Entrada</button>
+                                        <button onclick="saidaMercadoria(${p.id})" style="background:#e74c3c; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">- Saída</button>
+                                        <button onclick="visualizarHistorico(${p.id})" style="background:#9b59b6; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">📋</button>
+                                    </div>
                                 </div>
-                                <div class="mobile-card-row">
-                                    <span class="mobile-card-label">Quantidade:</span>
-                                    <span class="mobile-card-value">${qtdUnidades} un</span>
-                                </div>
-                                <div class="mobile-card-row">
-                                    <span class="mobile-card-label">Preço Unit.:</span>
-                                    <span class="mobile-card-value">R$ ${p.preco.toFixed(2)}</span>
-                                </div>
-                                <div class="mobile-card-row">
-                                    <span class="mobile-card-label">Total:</span>
-                                    <span class="mobile-card-value">R$ ${total}</span>
-                                </div>
-                                <div class="mobile-card-actions">
-                                    <button onclick="entradaMercadoria(${p.id})" style="background:#27ae60; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">+ Entrada</button>
-                                    <button onclick="saidaMercadoria(${p.id})" style="background:#e74c3c; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">- Saída</button>
-                                    <button onclick="visualizarHistorico(${p.id})" style="background:#9b59b6; color:white; border:none; border-radius:8px; padding:12px; font-weight:600;">📋</button>
-                                </div>
-                            </div>
-                        `;
-                    });
+                            `;
+                        });
+                    }
                     
                     htmlCategoria += `</div>`;
                 });
@@ -1431,8 +1454,11 @@
             console.log('Produto:', p.nome, p.volume);
             console.log('Qtd ANTES (tipo):', typeof p.qtd, 'valor:', p.qtd);
             
-            const lote = prompt('Número do lote:');
-            if (!lote) return;
+            let lote = 'N/A';
+            if (p.categoria !== 'Essências') {
+                lote = prompt('Número do lote:');
+                if (!lote) return;
+            }
             const qtdInput = prompt('Quantidade de unidades:');
             const qtd = parseInt(qtdInput, 10);
             if (isNaN(qtd) || qtd <= 0) {
@@ -1993,7 +2019,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: {
-                        duration: 1500,
+                        duration: isMobileView() ? 0 : 1500,
                         easing: 'easeInOutQuart'
                     },
                     interaction: {
@@ -2222,7 +2248,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: {
-                        duration: 1500,
+                        duration: isMobileView() ? 0 : 1500,
                         easing: 'easeInOutQuart'
                     },
                     interaction: {
