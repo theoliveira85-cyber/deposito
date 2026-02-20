@@ -1013,6 +1013,15 @@
                 .toLowerCase();
         }
 
+        function parsePrecoInput(valor) {
+            if (valor === null || valor === undefined) return 0;
+            const texto = String(valor)
+                .replace(/[^0-9,.-]/g, '')
+                .replace(',', '.');
+            const numero = parseFloat(texto);
+            return Number.isNaN(numero) ? 0 : numero;
+        }
+
         function ehProdutoEssencia(produto) {
             const nomeNormalizado = normalizarTexto(produto?.nome);
             const categoriaNormalizada = normalizarTexto(produto?.categoria);
@@ -1410,7 +1419,7 @@
             }
 
             const qtd = parseInt(prompt('Quantidade:')) || 0;
-            const preco = parseFloat(prompt('Preço unitário:')) || 0;
+            const preco = parsePrecoInput(prompt('Preço unitário:')) || 0;
             
             const novoProduto = {
                 id: Date.now(),
@@ -1738,7 +1747,7 @@
                             nome: String(row.Produto).trim(),
                             categoria: categoriaNormalizada,
                             volume: categoriaNormalizada === 'Essências' ? '100ML' : volumeInformado,
-                            preco: categoriaNormalizada === 'Essências' ? 8.90 : (parseFloat(row.Preco) || 0),
+                            preco: categoriaNormalizada === 'Essências' ? 8.90 : (parsePrecoInput(row.Preco) || 0),
                             estoqueMin: parseInt(row['Estoque Minimo']) || 0,
                             qtdInicial: parseInt(row['Quantidade Inicial']) || 0
                         });
