@@ -567,7 +567,7 @@
     <div id="appPrincipal" style="display: none;">
     <div class="container">
         <header style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px;">
-            <h1 style="margin: 0;">📦 Galpao Seu Vital - Controle de Estoque</h1>
+            <h1 style="margin: 0;">📦 Galpao Seu Vital - Controle de Estoque <span style="font-size: 12px; background: #16a34a; color: #fff; padding: 4px 8px; border-radius: 999px; vertical-align: middle;">ESSÊNCIAS FIX v3</span></h1>
             <div style="display: flex; gap: 15px; align-items: center; background: rgba(255,255,255,0.15); padding: 10px 20px; border-radius: 50px; backdrop-filter: blur(10px);">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: white;">
@@ -625,6 +625,8 @@
                 <button class="category-tab" data-categoria="Lava Roupas" data-volume="5L">👕 Lava Roupas 5L</button>
                 <button class="category-tab" data-categoria="Lava Louças" data-volume="2L">🍽️ Lava Louças 2L</button>
                 <button class="category-tab" data-categoria="Lava Louças" data-volume="5L">🍽️ Lava Louças 5L</button>
+                <button class="category-tab" data-categoria="Essências" data-volume="100ML">🌸 Essências 100ML</button>
+                <button class="category-tab" data-categoria="Essências" data-volume="1L">🌸 Essências 1L</button>
             </div>
             <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);">
                 <h3 id="categoriaAtual" style="color: #1f2937; margin: 0; font-size: 20px; font-weight: 700; text-align: center;">🧴 Desinfetantes 2L - Últimos 7 dias</h3>
@@ -638,17 +640,22 @@
             <div class="controls">
                 <input type="text" id="searchInput" placeholder="Buscar produto...">
                 <button onclick="adicionarProduto()">+ Adicionar Produto</button>
+                <button id="btnModoEssencias" onclick="alternarModoVolumeEssencias()">🌸 Modo Essências: 100ML</button>
+                <button onclick="aplicarCorrecaoEssenciasAgora()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">⚡ Aplicar Essências Agora</button>
             </div>
             
             <div class="filters">
                 <label style="font-weight: 600; color: #2c3e50;">Filtrar por:</label>
                 <select id="filterCategoria" onchange="renderizarTabela()">
                     <option value="">Todas as Categorias</option>
+                    <option value="Essências">Essências</option>
                 </select>
                 <select id="filterVolume" onchange="renderizarTabela()">
                     <option value="">Todos os Volumes</option>
                     <option value="2L">2L</option>
                     <option value="5L">5L</option>
+                    <option value="1L">1L</option>
+                    <option value="100ML">100ML</option>
                 </select>
             </div>
             
@@ -940,13 +947,142 @@
         
         // ===== FUNÇÕES FIREBASE =====
 
+        const CHAVE_CONFIG_ESSENCIAS = 'estoque_config_essencias_1l';
+        const CONFIG_ESSENCIAS = {
+            habilitarVolume1L: localStorage.getItem(CHAVE_CONFIG_ESSENCIAS) === 'true'
+        };
+
+        function obterVolumePadraoEssencia() {
+            return CONFIG_ESSENCIAS.habilitarVolume1L ? '1L' : '100ML';
+        }
+
+        function atualizarBotaoModoEssencias() {
+            const btnModoEssencias = document.getElementById('btnModoEssencias');
+            if (!btnModoEssencias) return;
+
+            const volumePadrao = obterVolumePadraoEssencia();
+            btnModoEssencias.textContent = `🌸 Modo Essências: ${volumePadrao}`;
+        }
+
+        function alternarModoVolumeEssencias() {
+            CONFIG_ESSENCIAS.habilitarVolume1L = !CONFIG_ESSENCIAS.habilitarVolume1L;
+            localStorage.setItem(CHAVE_CONFIG_ESSENCIAS, String(CONFIG_ESSENCIAS.habilitarVolume1L));
+
+            atualizarBotaoModoEssencias();
+            renderizarTabela();
+
+            const abaAtiva = document.querySelector('.category-tab.active');
+            if (abaAtiva && abaAtiva.dataset.categoria === 'Essências') {
+                atualizarGraficoPorCategoria('Essências', abaAtiva.dataset.volume || obterVolumePadraoEssencia(), abaAtiva);
+            }
+        }
+
+        function aplicarCorrecaoEssenciasAgora() {
+            const houveMudanca = normalizarCategoriaEssencias(produtos);
+            renderizarTabela();
+
+            const abaAtiva = document.querySelector('.category-tab.active');
+            if (abaAtiva && abaAtiva.dataset.categoria === 'Essências') {
+                atualizarGraficoPorCategoria('Essências', abaAtiva.dataset.volume || obterVolumePadraoEssencia(), abaAtiva);
+            }
+
+            if (houveMudanca) {
+                salvarDados();
+                alert('✅ Correção aplicada! Essências foram ajustadas (categoria, volume e preço 8,90).');
+            } else {
+                alert('ℹ️ Nenhuma alteração necessária nas Essências neste momento.');
+            }
+        }
+
+        function normalizarTexto(valor) {
+            return String(valor || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+        }
+
+        function ehProdutoEssencia(produto) {
+            const nomeNormalizado = normalizarTexto(produto?.nome);
+            const categoriaNormalizada = normalizarTexto(produto?.categoria);
+            const volumeNormalizado = String(produto?.volume || '').trim().toUpperCase();
+            const preco = parseFloat(produto?.preco);
+
+            const categoriasEssencia = ['essencia', 'essencias', 'fragrancia', 'fragrancias', 'aroma', 'aromas'];
+            const categoriasPrincipais = ['desinfetantes', 'amaciantes', 'lava roupas', 'lava loucas', 'essencias'];
+
+            const indicioNome = nomeNormalizado.includes('essencia') || nomeNormalizado.includes('fragrancia') || nomeNormalizado.includes('aroma');
+            const indicioCategoria = categoriasEssencia.includes(categoriaNormalizada);
+            const indicioVolumeEssencia = volumeNormalizado === '100ML' || volumeNormalizado === '1L';
+            const categoriaForaPadrao = !categoriasPrincipais.includes(categoriaNormalizada);
+            const indicioPrecoEssencia = !Number.isNaN(preco) && (Math.abs(preco - 8.9) < 0.01 || Math.abs(preco - 8.0) < 0.01);
+
+            return indicioNome || indicioCategoria || (indicioVolumeEssencia && categoriaForaPadrao) || (indicioVolumeEssencia && indicioPrecoEssencia);
+        }
+
+        function obterListaProdutosSnapshot(dados) {
+            if (Array.isArray(dados)) {
+                return dados.filter(item => item && typeof item === 'object');
+            }
+
+            if (dados && typeof dados === 'object') {
+                return Object.values(dados).filter(item => item && typeof item === 'object');
+            }
+
+            return [];
+        }
+
+        function obterVolumeEssenciaValido(produto) {
+            const volumeAtual = String(produto?.volume || '').trim().toUpperCase();
+            if (volumeAtual === '100ML' || volumeAtual === '1L') {
+                return volumeAtual;
+            }
+
+            const nomeNormalizado = normalizarTexto(produto?.nome);
+            if (nomeNormalizado.includes('1l') || nomeNormalizado.includes('1000ml')) {
+                return '1L';
+            }
+            if (nomeNormalizado.includes('100ml')) {
+                return '100ML';
+            }
+
+            return obterVolumePadraoEssencia();
+        }
+
+        function normalizarCategoriaEssencias(listaProdutos) {
+            let alterou = false;
+
+            listaProdutos.forEach(produto => {
+                if (ehProdutoEssencia(produto)) {
+                    if (produto.categoria !== 'Essências') {
+                        produto.categoria = 'Essências';
+                        alterou = true;
+                    }
+
+                    const volumeEssencia = obterVolumeEssenciaValido(produto);
+                    if (produto.volume !== volumeEssencia) {
+                        produto.volume = volumeEssencia;
+                        alterou = true;
+                    }
+
+                    if (parseFloat(produto.preco) !== 8.9) {
+                        produto.preco = 8.90;
+                        alterou = true;
+                    }
+                }
+            });
+
+            return alterou;
+        }
+
         
         // Carregar produtos do Firebase
         function carregarProdutos() {
             produtosRef.once('value', (snapshot) => {
                 const dados = snapshot.val();
-                if (dados && Array.isArray(dados) && dados.length > 0) {
-                    produtos = dados;
+                const listaProdutos = obterListaProdutosSnapshot(dados);
+
+                if (listaProdutos.length > 0) {
+                    produtos = listaProdutos;
                     console.log('✅ Produtos carregados do Firebase:', produtos.length);
                     
                     // Garantir que todos tenham o marcador _v (sem converter novamente)
@@ -957,6 +1093,10 @@
                             precisaSalvar = true;
                         }
                     });
+
+                    if (normalizarCategoriaEssencias(produtos)) {
+                        precisaSalvar = true;
+                    }
                     
                     if (precisaSalvar) {
                         console.log('📌 Marcando produtos como v2...');
@@ -1004,14 +1144,21 @@
         let primeiraExecucao = true;
         produtosRef.on('value', (snapshot) => {
             const dados = snapshot.val();
-            if (dados && Array.isArray(dados)) {
+            const listaProdutos = obterListaProdutosSnapshot(dados);
+
+            if (listaProdutos.length > 0) {
                 // Pular primeira execução (já tratada em carregarProdutos)
                 if (primeiraExecucao) {
                     primeiraExecucao = false;
                     return;
                 }
                 
-                produtos = dados;
+                produtos = listaProdutos;
+
+                if (normalizarCategoriaEssencias(produtos)) {
+                    salvarDados();
+                }
+
                 renderizarTabela();
                 console.log('🔄 Dados atualizados em tempo real!');
             }
@@ -1060,6 +1207,7 @@
         }
         
         function obterUnidades(produto) {
+            if (produto.categoria === 'Essências') return 1;
             return produto.volume === '5L' ? 42 : 108;
         }
         
@@ -1093,7 +1241,7 @@
             
             const estoqueCritico = produtos.filter(p => {
                 const qtd = parseInt(p.qtd, 10) || 0;
-                const limite = p.volume === '5L' ? 42 : 108;
+                const limite = p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108);
                 return qtd <= limite;
             }).length;
             
@@ -1158,7 +1306,7 @@
                         const unidades = obterUnidades(p);
                         const andares = Math.ceil(qtdUnidades / unidades);
                         const total = (andares * p.preco).toFixed(2);
-                        const lowStock = qtdUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
                         const lowStockStyle = lowStock ? 'background: #fadbd8;' : '';
                         
                         // Renderizar linha da tabela (desktop)
@@ -1185,7 +1333,7 @@
                         const unidades = obterUnidades(p);
                         const andares = Math.ceil(qtdUnidades / unidades);
                         const total = (andares * p.preco).toFixed(2);
-                        const lowStock = qtdUnidades <= (p.volume === '5L' ? 42 : 108);
+                        const lowStock = qtdUnidades <= (p.categoria === 'Essências' ? 10 : (p.volume === '5L' ? 42 : 108));
                         const alertIcon = lowStock ? ' ⚠️' : '';
                         
                         htmlCategoria += `
@@ -1224,7 +1372,8 @@
             });
             
             // Preencher filtro de categorias
-            const categorias = [...new Set(produtos.map(p => p.categoria))].sort();
+            const categoriasFixas = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências'];
+            const categorias = [...new Set([...categoriasFixas, ...produtos.map(p => p.categoria)])].sort();
             const selectCategoria = document.getElementById('filterCategoria');
             const categoriaAtual = selectCategoria.value;
             selectCategoria.innerHTML = '<option value="">Todas as Categorias</option>';
@@ -1239,18 +1388,38 @@
         function adicionarProduto() {
             const nome = prompt('Nome do produto:');
             if (!nome) return;
+
+            const categoriasDisponiveis = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências'];
+            const categoriaSugerida = ehProdutoEssencia({ nome }) ? 'Essências' : 'Desinfetantes';
+            const categoriaInput = prompt(
+                `Categoria (${categoriasDisponiveis.join(', ')}):`,
+                categoriaSugerida
+            );
+            if (categoriaInput === null) return;
+
+            const categoriaSelecionada = categoriasDisponiveis.find(
+                categoria => normalizarTexto(categoria) === normalizarTexto(categoriaInput)
+            );
+
+            if (!categoriaSelecionada) {
+                alert('Categoria inválida! Use uma das opções informadas.');
+                return;
+            }
+
             const qtd = parseInt(prompt('Quantidade:')) || 0;
             const preco = parseFloat(prompt('Preço unitário:')) || 0;
             
-            produtos.push({
+            const novoProduto = {
                 id: Date.now(),
                 nome,
-                categoria: 'Outros',
-                volume: '2L',
+                categoria: categoriaSelecionada,
+                volume: categoriaSelecionada === 'Essências' ? obterVolumePadraoEssencia() : '2L',
                 qtd,
-                preco,
+                preco: categoriaSelecionada === 'Essências' ? 8.90 : preco,
                 lotes: []
-            });
+            };
+
+            produtos.push(novoProduto);
             salvarDados();
             renderizarTabela();
         }
@@ -1533,23 +1702,36 @@
                         }
                         
                         // Validar categoria
-                        const categoriasValidas = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças'];
-                        if (!categoriasValidas.includes(row.Categoria)) {
+                        const categoriasMapeadas = {
+                            'desinfetantes': 'Desinfetantes',
+                            'amaciantes': 'Amaciantes',
+                            'lava roupas': 'Lava Roupas',
+                            'lava loucas': 'Lava Louças',
+                            'essencias': 'Essências'
+                        };
+                        const categoriaNormalizada = categoriasMapeadas[normalizarTexto(row.Categoria)];
+                        if (!categoriaNormalizada) {
                             erros.push(`Linha ${linha}: Categoria inválida "${row.Categoria}"`);
                             return;
                         }
                         
                         // Validar volume
-                        if (row.Volume !== '2L' && row.Volume !== '5L') {
+                        const volumeInformado = String(row.Volume).trim().toUpperCase();
+                        if (categoriaNormalizada === 'Essências') {
+                            if (volumeInformado !== '100ML' && volumeInformado !== '1L') {
+                                erros.push(`Linha ${linha}: Volume inválido "${row.Volume}" para Essências (use 100ML ou 1L)`);
+                                return;
+                            }
+                        } else if (volumeInformado !== '2L' && volumeInformado !== '5L') {
                             erros.push(`Linha ${linha}: Volume inválido "${row.Volume}"`);
                             return;
                         }
                         
                         produtosParaImportar.push({
                             nome: String(row.Produto).trim(),
-                            categoria: row.Categoria,
-                            volume: row.Volume,
-                            preco: parseFloat(row.Preco) || 0,
+                            categoria: categoriaNormalizada,
+                            volume: volumeInformado,
+                            preco: categoriaNormalizada === 'Essências' ? 8.90 : (parseFloat(row.Preco) || 0),
                             estoqueMin: parseInt(row['Estoque Minimo']) || 0,
                             qtdInicial: parseInt(row['Quantidade Inicial']) || 0
                         });
@@ -1930,11 +2112,14 @@
             }
             
             // Atualizar título
-            document.getElementById('categoriaAtual').textContent = `${categoria} ${volume} - Últimos ${currentCategoriaPeriod} dias`;
+            const sufixoVolume = volume ? ` ${volume}` : '';
+            document.getElementById('categoriaAtual').textContent = `${categoria}${sufixoVolume} - Últimos ${currentCategoriaPeriod} dias`;
             
             // Filtrar produtos pela categoria e volume
             const produtosFiltrados = produtos.filter(p => {
-                return p.categoria === categoria && p.volume === volume;
+                const categoriaCorreta = p.categoria === categoria;
+                const volumeCorreto = !volume || p.volume === volume;
+                return categoriaCorreta && volumeCorreto;
             });
             
             // Calcular movimentação
@@ -2082,7 +2267,7 @@
                         },
                         title: {
                             display: true,
-                            text: `📈 ${categoria} ${volume} - Últimos ${dias} dias`,
+                            text: `📈 ${categoria}${sufixoVolume} - Últimos ${dias} dias`,
                             font: {
                                 size: 20,
                                 weight: 'bold',
@@ -2158,6 +2343,8 @@
         
         // Event listeners para botões de período
         document.addEventListener('DOMContentLoaded', () => {
+            atualizarBotaoModoEssencias();
+
             document.querySelectorAll('.period-tab').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const dias = parseInt(this.dataset.dias);
@@ -2277,8 +2464,8 @@
                 <p style="margin: 10px 0; color: #475569;">O arquivo Excel deve conter as seguintes colunas:</p>
                 <ul style="color: #64748b; line-height: 1.8;">
                     <li><strong>Produto</strong> - Nome do produto</li>
-                    <li><strong>Categoria</strong> - Desinfetantes, Amaciantes, Lava Roupas ou Lava Louças</li>
-                    <li><strong>Volume</strong> - 2L ou 5L</li>
+                    <li><strong>Categoria</strong> - Desinfetantes, Amaciantes, Lava Roupas, Lava Louças ou Essências</li>
+                    <li><strong>Volume</strong> - Desinfetantes/Amaciantes/Lava Roupas/Lava Louças: 2L ou 5L | Essências: 100ML ou 1L (salvo conforme Modo Essências ativo)</li>
                     <li><strong>Preco</strong> - Preço unitário (ex: 10.50)</li>
                     <li><strong>Estoque Minimo</strong> - Quantidade mínima (ex: 50)</li>
                     <li><strong>Quantidade Inicial</strong> - Estoque inicial (opcional)</li>
