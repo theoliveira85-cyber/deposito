@@ -1020,7 +1020,7 @@
             const preco = parseFloat(produto?.preco);
 
             const categoriasEssencia = ['essencia', 'essencias', 'fragrancia', 'fragrancias', 'aroma', 'aromas'];
-            const categoriasPrincipais = ['desinfetantes', 'amaciantes', 'lava roupas', 'lava loucas', 'essencias'];
+            const categoriasPrincipais = ['desinfetantes', 'amaciantes', 'lava roupas', 'lava loucas', 'essencias', 'escritorio'];
 
             const indicioNome = nomeNormalizado.includes('essencia') || nomeNormalizado.includes('fragrancia') || nomeNormalizado.includes('aroma');
             const indicioCategoria = categoriasEssencia.includes(categoriaNormalizada);
@@ -1375,7 +1375,7 @@
             });
             
             // Preencher filtro de categorias
-            const categoriasFixas = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências'];
+            const categoriasFixas = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências', 'Escritório'];
             const categorias = [...new Set([...categoriasFixas, ...produtos.map(p => p.categoria)])].sort();
             const selectCategoria = document.getElementById('filterCategoria');
             const categoriaAtual = selectCategoria.value;
@@ -1392,7 +1392,7 @@
             const nome = prompt('Nome do produto:');
             if (!nome) return;
 
-            const categoriasDisponiveis = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências'];
+            const categoriasDisponiveis = ['Desinfetantes', 'Amaciantes', 'Lava Roupas', 'Lava Louças', 'Essências', 'Escritório'];
             const categoriaSugerida = ehProdutoEssencia({ nome }) ? 'Essências' : 'Desinfetantes';
             const categoriaInput = prompt(
                 `Categoria (${categoriasDisponiveis.join(', ')}):`,
@@ -1713,7 +1713,8 @@
                             'amaciantes': 'Amaciantes',
                             'lava roupas': 'Lava Roupas',
                             'lava loucas': 'Lava Louças',
-                            'essencias': 'Essências'
+                            'essencias': 'Essências',
+                            'escritorio': 'Escritório'
                         };
                         const categoriaNormalizada = categoriasMapeadas[normalizarTexto(row.Categoria)];
                         if (!categoriaNormalizada) {
