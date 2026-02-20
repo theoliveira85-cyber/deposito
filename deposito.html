@@ -626,7 +626,6 @@
                 <button class="category-tab" data-categoria="Lava Louças" data-volume="2L">🍽️ Lava Louças 2L</button>
                 <button class="category-tab" data-categoria="Lava Louças" data-volume="5L">🍽️ Lava Louças 5L</button>
                 <button class="category-tab" data-categoria="Essências" data-volume="100ML">🌸 Essências 100ML</button>
-                <button class="category-tab" data-categoria="Essências" data-volume="1L">🌸 Essências 1L</button>
             </div>
             <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(102, 126, 234, 0.2); box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);">
                 <h3 id="categoriaAtual" style="color: #1f2937; margin: 0; font-size: 20px; font-weight: 700; text-align: center;">🧴 Desinfetantes 2L - Últimos 7 dias</h3>
@@ -949,11 +948,11 @@
 
         const CHAVE_CONFIG_ESSENCIAS = 'estoque_config_essencias_1l';
         const CONFIG_ESSENCIAS = {
-            habilitarVolume1L: localStorage.getItem(CHAVE_CONFIG_ESSENCIAS) === 'true'
+            habilitarVolume1L: false
         };
 
         function obterVolumePadraoEssencia() {
-            return CONFIG_ESSENCIAS.habilitarVolume1L ? '1L' : '100ML';
+            return '100ML';
         }
 
         function atualizarBotaoModoEssencias() {
@@ -965,16 +964,9 @@
         }
 
         function alternarModoVolumeEssencias() {
-            CONFIG_ESSENCIAS.habilitarVolume1L = !CONFIG_ESSENCIAS.habilitarVolume1L;
-            localStorage.setItem(CHAVE_CONFIG_ESSENCIAS, String(CONFIG_ESSENCIAS.habilitarVolume1L));
-
-            atualizarBotaoModoEssencias();
-            renderizarTabela();
-
-            const abaAtiva = document.querySelector('.category-tab.active');
-            if (abaAtiva && abaAtiva.dataset.categoria === 'Essências') {
-                atualizarGraficoPorCategoria('Essências', abaAtiva.dataset.volume || obterVolumePadraoEssencia(), abaAtiva);
-            }
+            CONFIG_ESSENCIAS.habilitarVolume1L = false;
+            localStorage.setItem(CHAVE_CONFIG_ESSENCIAS, 'false');
+            aplicarCorrecaoEssenciasAgora();
         }
 
         function aplicarCorrecaoEssenciasAgora() {
@@ -1032,20 +1024,7 @@
         }
 
         function obterVolumeEssenciaValido(produto) {
-            const volumeAtual = String(produto?.volume || '').trim().toUpperCase();
-            if (volumeAtual === '100ML' || volumeAtual === '1L') {
-                return volumeAtual;
-            }
-
-            const nomeNormalizado = normalizarTexto(produto?.nome);
-            if (nomeNormalizado.includes('1l') || nomeNormalizado.includes('1000ml')) {
-                return '1L';
-            }
-            if (nomeNormalizado.includes('100ml')) {
-                return '100ML';
-            }
-
-            return obterVolumePadraoEssencia();
+            return '100ML';
         }
 
         function normalizarCategoriaEssencias(listaProdutos) {
@@ -1730,7 +1709,7 @@
                         produtosParaImportar.push({
                             nome: String(row.Produto).trim(),
                             categoria: categoriaNormalizada,
-                            volume: volumeInformado,
+                            volume: categoriaNormalizada === 'Essências' ? '100ML' : volumeInformado,
                             preco: categoriaNormalizada === 'Essências' ? 8.90 : (parseFloat(row.Preco) || 0),
                             estoqueMin: parseInt(row['Estoque Minimo']) || 0,
                             qtdInicial: parseInt(row['Quantidade Inicial']) || 0
