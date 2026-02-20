@@ -1007,8 +1007,9 @@
             const indicioVolumeEssencia = volumeNormalizado === '100ML' || volumeNormalizado === '1L';
             const categoriaForaPadrao = !categoriasPrincipais.includes(categoriaNormalizada);
             const indicioPrecoEssencia = !Number.isNaN(preco) && (Math.abs(preco - 8.9) < 0.01 || Math.abs(preco - 8.0) < 0.01);
+            const indicioOutrosEssencia = categoriaNormalizada === 'outros' && (indicioNome || indicioVolumeEssencia || indicioPrecoEssencia);
 
-            return indicioNome || indicioCategoria || (indicioVolumeEssencia && categoriaForaPadrao) || (indicioVolumeEssencia && indicioPrecoEssencia);
+            return indicioNome || indicioCategoria || (indicioVolumeEssencia && categoriaForaPadrao) || (indicioVolumeEssencia && indicioPrecoEssencia) || indicioOutrosEssencia;
         }
 
         function obterListaProdutosSnapshot(dados) {
