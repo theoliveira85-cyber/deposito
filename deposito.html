@@ -1031,7 +1031,7 @@
             const categoriasEssencia = ['essencia', 'essencias', 'fragrancia', 'fragrancias', 'aroma', 'aromas'];
             const categoriasPrincipais = ['desinfetantes', 'amaciantes', 'lava roupas', 'lava loucas', 'essencias', 'escritorio'];
 
-            const indicioNome = nomeNormalizado.includes('essencia') || nomeNormalizado.includes('fragrancia') || nomeNormalizado.includes('aroma');
+            const indicioNome = nomeNormalizado.includes('essencia') || nomeNormalizado.includes('fragrancia') || nomeNormalizado.includes('aroma') || nomeNormalizado.includes('baunilha de madagascar') || nomeNormalizado.includes('baunilha');
             const indicioCategoria = categoriasEssencia.includes(categoriaNormalizada);
             const indicioVolumeEssencia = volumeNormalizado === '100ML' || volumeNormalizado === '1L';
             const categoriaForaPadrao = !categoriasPrincipais.includes(categoriaNormalizada);
